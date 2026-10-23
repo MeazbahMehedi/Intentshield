@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PromptGuard{% endblock %} · PromptGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="{{ url_for('main.index') }}"><span class="brand-icon">P</span><span>Prompt<span class="brand-light">Guard</span><small>AI SECURITY WORKSPACE</small></span></a>
+      <div class="nav-label">WORKSPACE</div>
+      <a class="nav-item active" href="{{ url_for('main.index') }}"><span aria-hidden="true">▦</span> Overview <span class="nav-dot"></span></a>
+      <a class="nav-item" href="{{ url_for('main.index') }}#scanner"><span aria-hidden="true">⌕</span> Prompt scanner</a>
+      <a class="nav-item" href="{{ url_for('main.index') }}#history"><span aria-hidden="true">◷</span> Scan history</a>
+      <div class="sidebar-bottom"><div class="status-dot"></div><div><strong>Local protection</strong><small>Running on this device</small></div></div>
+    </aside>
+    <main class="main-area">
+      <header class="topbar"><div><span class="breadcrumb">Workspace</span><span class="crumb-slash">/</span><strong>Overview</strong></div><div class="topbar-right"><span class="live-pill" title="Local Flask application is responding"><i></i> LOCAL ENGINE ONLINE</span><div class="avatar">PG</div></div></header>
+      <div class="page-content">{% block content %}{% endblock %}</div>
+      <footer>PromptGuard <span>·</span> Heuristic prompt-injection screening <span class="footer-right">For educational use — not a security guarantee</span></footer>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

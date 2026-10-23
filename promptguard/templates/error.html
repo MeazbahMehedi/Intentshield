@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Error · PromptGuard{% endblock %}
+{% block content %}
+  <h1>Something went wrong</h1>
+  <p>{{ message or "The server could not complete that request." }}</p>
+{% endblock %}

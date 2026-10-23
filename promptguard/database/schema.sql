@@ -1,0 +1,2 @@
+-- Tables for evaluation history will be added in a later milestone.
+-- This file is intentionally empty of CREATE statements for now.

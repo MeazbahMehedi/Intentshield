@@ -1,0 +1,29 @@
+{
+  "pattern_rules": [],
+  "structured_rules": [
+    {
+      "name": "Tool execution with instruction override",
+      "all_terms": ["ignore previous instructions"],
+      "any_terms": ["run command", "execute tool", "call the function", "use the browser"],
+      "explanation": "Combines an instruction-override phrase with a request to execute a tool or action.",
+      "weight": 35,
+      "category": "Prompt injection"
+    },
+    {
+      "name": "Credential collection and external destination",
+      "all_terms": ["password"],
+      "any_terms": ["send to", "upload to", "email to", "forward to"],
+      "explanation": "Combines credential-related language with a request to send information to another destination.",
+      "weight": 40,
+      "category": "Data exposure"
+    },
+    {
+      "name": "Untrusted text claims authority",
+      "all_terms": ["ignore the user"],
+      "any_terms": ["document says", "webpage says", "email says", "quoted text says"],
+      "explanation": "May indicate that instructions embedded in external content are being treated as authoritative.",
+      "weight": 30,
+      "category": "Prompt injection"
+    }
+  ]
+}
