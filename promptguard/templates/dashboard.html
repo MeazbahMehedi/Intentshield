@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block top_actions %}
+  <select id="range" class="dash-select" aria-label="Time range">
+    <option value="day">Today</option><option value="week" selected>This week</option>
+    <option value="month">This month</option><option value="all">All time</option>
+  </select>
+  <a class="dash-btn" href="{{ url_for('main.api_export') }}">⤓ Download report</a>
+{% endblock %}
+{% block content %}
+<div id="empty-banner" class="dash-banner" hidden>
+  <div><strong>No scans saved yet.</strong> Scan a prompt on the Scanner page, or load sample prompts (analysed by the real detector, labelled “[demo]”).</div>
+  <button class="dash-btn" id="seed" type="button">Load sample data</button>
+</div>
+
+<!-- Stat cards -->
+<section class="dash-cards" aria-label="Summary">
+  {% for key, label, color in [('total','Total scans','#6e7bff'),('flagged','Flagged (Medium/High)','#ffbd69'),('high','High risk','#ff7389'),('avg','Average score','#56d6a0')] %}
+  <article class="dcard" style="--c:{{ color }}" data-key="{{ key }}">
+    <div class="dcard-label">{{ label }}</div>
+    <div class="dcard-row">
+      <div><div class="dcard-num" data-num>0</div><span class="dbadge" data-delta>–</span></div>
+      <div class="spark" data-spark aria-hidden="true"></div>
+    </div>
+    <div class="dcard-sub" data-sub>vs previous period</div>
+  </article>
+  {% endfor %}
+</section>
+
+<div class="dash-grid">
+  <div class="dash-col">
+    <!-- Gauge -->
+    <section class="dpanel">
+      <h2>Risk distribution</h2><p class="dsub">How scans in this period were classified.</p>
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 220 125" class="semi" role="img" aria-label="Risk distribution gauge">
+          <path d="M20 110A90 90 0 0 1 200 110" class="semi-bg" pathLength="100"/>
+          <g id="semi-segs"></g>
+        </svg>
+        <div class="semi-center"><small>Total scans</small><strong id="semi-total">0</strong></div>
+      </div>
+      <div class="legend3">
+        <div><i style="background:#56d6a0"></i>Low<b id="lv-Low">0</b></div>
+        <div><i style="background:#ffbd69"></i>Medium<b id="lv-Medium">0</b></div>
+        <div><i style="background:#ff7389"></i>High<b id="lv-High">0</b></div>
+      </div>
+    </section>
+    <!-- Top rules -->
+    <section class="dpanel">
+      <h2>Top matched rules</h2>
+      <table class="dtable"><thead><tr><th>Rule</th><th>Frequency</th><th>Hits</th></tr></thead><tbody id="rules-body"></tbody></table>
+      <p class="dsub" id="rules-empty" hidden>No rules matched in this period.</p>
+    </section>
+  </div>
+
+  <!-- Bubble cluster with page tabs (navigation bar 3) -->
+  <section class="dpanel dpanel-tall">
+    <h2>Detection categories</h2><p class="dsub">Bubble size = number of scans that matched the category.</p>
+    <div class="ptabs" role="tablist" aria-label="Filter by risk level">
+      <button role="tab" aria-selected="true" data-lv="All">All</button>
+      <button role="tab" aria-selected="false" data-lv="High">High</button>
+      <button role="tab" aria-selected="false" data-lv="Medium">Medium</button>
+      <button role="tab" aria-selected="false" data-lv="Low">Low</button>
+    </div>
+    <div class="bubbles-wrap">
+      <svg id="bubbles" viewBox="0 0 600 380" role="img" aria-label="Category bubbles"></svg>
+      <p class="dsub bubble-empty" id="bubble-empty" hidden>No category matches for this filter.</p>
+    </div>
+    <div class="blegend" id="blegend"></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const NS = "http://www.w3.org/2000/svg";
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const COLORS = ["#6e7bff", "#a45cff", "#18b5c9", "#4c8dd6", "#ff7ab8", "#56d6a0", "#ffbd69"];
+  let data = null, level = "All";
+
+  const svg = (tag, attrs = {}, kids = []) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    kids.forEach((c) => n.append(c));
+    return n;
+  };
+  function countUp(node, to, decimals = 0) {
+    if (reduce) { node.textContent = to.toFixed(decimals); return; }
+    const from = 0, t0 = performance.now();
+    (function tick(now) {
+      const p = Math.min(1, (now - t0) / 900), e = 1 - Math.pow(1 - p, 3);
+      node.textContent = (from + (to - from) * e).toFixed(decimals);
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+
+  function renderCards(d) {
+    document.querySelectorAll(".dcard").forEach((card, i) => {
+      const k = card.dataset.key, val = d.metrics[k], delta = d.delta[k];
+      card.style.animationDelay = i * 80 + "ms";
+      countUp($("[data-num]", card), val, k === "avg" ? 1 : 0);
+      const b = $("[data-delta]", card);
+      if (delta === null || delta === undefined) { b.textContent = "no prior data"; b.className = "dbadge flat"; }
+      else {
+        const up = delta >= 0, bad = k !== "total" && k !== "avg" ? up : false;
+        b.textContent = (up ? "↑ " : "↓ ") + Math.abs(delta) + "%";
+        b.className = "dbadge " + (bad ? "bad" : "good");
+      }
+      const sp = $("[data-spark]", card), vals = d.series[k] || d.series.total, max = Math.max(1, ...vals);
+      sp.replaceChildren(...vals.map((v, j) => {
+        const bar = document.createElement("i");
+        bar.title = d.days[j] + ": " + v;
+        bar.style.height = "4px"; bar.style.transitionDelay = j * 50 + "ms";
+        requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.height = Math.max(4, (v / max) * 46) + "px")));
+        return bar;
+      }));
+    });
+  }
+
+  function renderGauge(d) {
+    const total = d.metrics.total, g = $("#semi-segs");
+    g.replaceChildren();
+    let start = 0;
+    [["Low", "#56d6a0"], ["Medium", "#ffbd69"], ["High", "#ff7389"]].forEach(([lv, col]) => {
+      const n = d.levels[lv]; $("#lv-" + lv).textContent = n;
+      const len = total ? (n / total) * 100 : 0;
+      if (!len) return;
+      const seg = svg("path", { d: "M20 110A90 90 0 0 1 200 110", pathLength: 100, class: "semi-seg", stroke: col });
+      seg.style.strokeDasharray = "0 100"; seg.style.strokeDashoffset = -start;
+      g.append(seg);
+      const shown = Math.max(0, len - (len < 100 ? 1.2 : 0));
+      requestAnimationFrame(() => requestAnimationFrame(() => (seg.style.strokeDasharray = shown + " " + (100 - shown))));
+      start += len;
+    });
+    countUp($("#semi-total"), total);
+  }
+
+  function renderRules(d) {
+    const body = $("#rules-body"), max = Math.max(1, ...d.top_rules.map((r) => r.hits));
+    $("#rules-empty").hidden = d.top_rules.length > 0;
+    body.replaceChildren(...d.top_rules.map((r) => {
+      const tr = document.createElement("tr"), a = document.createElement("td"), b = document.createElement("td"), c = document.createElement("td");
+      a.textContent = r.name; c.textContent = r.hits;
+      const filled = Math.max(1, Math.round((r.hits / max) * 6)), bars = document.createElement("div");
+      bars.className = "sev";
+      for (let i = 0; i < 6; i++) { const s = document.createElement("i"); if (i < filled) s.className = "on"; bars.append(s); }
+      b.append(bars); tr.append(a, b, c); return tr;
+    }));
+  }
+
+  function renderBubbles() {
+    const root = $("#bubbles"), legend = $("#blegend");
+    root.replaceChildren(); legend.replaceChildren();
+    const items = Object.entries(data.categories)
+      .map(([name, c]) => [name, level === "All" ? c.High + c.Medium + c.Low : c[level]])
+      .filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+    $("#bubble-empty").hidden = items.length > 0;
+    if (!items.length) return;
+    const cx = 300, cy = 190, max = items[0][1];
+    [[250, 150, 0], [185, 105, 1]].forEach(([rx, ry, k]) => root.append(svg("ellipse", { cx, cy, rx, ry, class: "orbit orbit-" + k })));
+    items.forEach(([name, n], i) => {
+      const r = 30 + Math.sqrt(n / max) * 42;
+      const ang = ((i - 1) / Math.max(1, items.length - 1)) * Math.PI * 2 - Math.PI / 2;
+      const x = i === 0 ? cx : cx + Math.cos(ang) * 225, y = i === 0 ? cy : cy + Math.sin(ang) * 135;
+      const col = COLORS[i % COLORS.length];
+      const grp = svg("g", { class: "bub", style: "--d:" + (i * 0.6) + "s;--dur:" + (5 + (i % 3)) + "s" });
+      const inner = svg("g", { transform: "translate(" + x + " " + y + ")" });
+      const pop = svg("g", { class: "pop", style: "animation-delay:" + i * 90 + "ms" });
+      const title = svg("title"); title.textContent = name + ": " + n + " scan" + (n === 1 ? "" : "s");
+      const t = svg("text", { class: "bnum", "text-anchor": "middle", dy: ".35em" }); t.textContent = n;
+      pop.append(title, svg("circle", { r, fill: col, opacity: 0.85 }), svg("circle", { r: r * 0.66, class: "bin" }), svg("circle", { r: r * 0.66, class: "bring", stroke: col }), t);
+      inner.append(pop); grp.append(inner); root.append(grp);
+      const li = document.createElement("span"), dot = document.createElement("i");
+      dot.style.background = col; li.append(dot, document.createTextNode(name)); legend.append(li);
+    });
+  }
+
+  async function load() {
+    try {
+      const res = await fetch("/api/dashboard?range=" + $("#range").value);
+      data = await res.json();
+    } catch { return; }
+    $("#empty-banner").hidden = data.metrics.total > 0 || Object.keys(data.categories).length > 0;
+    renderCards(data); renderGauge(data); renderRules(data); renderBubbles();
+  }
+
+  $("#range").addEventListener("change", load);
+  document.querySelectorAll(".ptabs button").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".ptabs button").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+    level = b.dataset.lv; if (data) renderBubbles();
+  }));
+  $("#seed").addEventListener("click", async () => { await fetch("/api/seed-demo", { method: "POST" }); load(); });
+  setInterval(() => { if (!document.hidden) load(); }, 30000);
+  load();
+})();
+</script>
+{% endblock %}
