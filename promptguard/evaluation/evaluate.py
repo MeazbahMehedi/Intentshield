@@ -46,10 +46,7 @@ def predict_label(detector, prompt):
     """Convert the detector's risk assessment into an attack/safe label."""
     result = detector.analyze(prompt)
     score = result.get("score", 0)
-
-    # Match the detector's configured Medium-risk threshold.
     return "attack" if score >= 25 else "safe"
-
 
 def run_evaluation(dataset_path=DATASET_PATH):
     """Evaluate all cases and return metrics and individual predictions."""
@@ -62,6 +59,7 @@ def run_evaluation(dataset_path=DATASET_PATH):
 
     for case in cases:
         prediction = predict_label(detector, case["prompt"])
+
         expected.append(case["expected_label"])
         predicted.append(prediction)
 
