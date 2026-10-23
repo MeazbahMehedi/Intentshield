@@ -170,6 +170,28 @@ PATTERN_RULES: tuple[dict[str, Any], ...] = (
         "category": "Prompt injection",
     },
 
+    {
+        "name": "Task replacement attempt",
+        "pattern": r"\b(your original task|the original task|your previous task)\b.{0,80}\b(no longer relevant|is irrelevant|does not apply|has been replaced)\b|\b(follow|obey)\s+my instructions instead\b",
+        "explanation": "Attempts to replace the original task with new instructions.",
+        "weight": 40,
+        "category": "Prompt injection",
+    },
+    {
+        "name": "Internal instruction reproduction",
+        "pattern": r"\b(reproduce|recite|repeat|quote|provide|print|output)\b.{0,80}\b(your )?(internal|hidden|system|developer)\s+instructions?\b|\b(internal|hidden|system|developer)\s+instructions?\b.{0,80}\b(exactly as written|verbatim|word for word)\b",
+        "explanation": "Requests exact reproduction of internal or privileged instructions.",
+        "weight": 45,
+        "category": "Prompt injection",
+    },
+    {
+        "name": "Unrestricted assistant jailbreak",
+        "pattern": r"\b(unrestricted assistant|unrestricted model|not bound by any rules|not bound by rules|free of all restrictions)\b",
+        "explanation": "Attempts to frame the assistant as unrestricted by its normal rules.",
+        "weight": 40,
+        "category": "Prompt injection",
+    },
+
 )
 
 
@@ -187,17 +209,37 @@ class PatternDetector(BaseDetector):
             for rule in rules
         )
 
+
     def detect(self, prompt: str) -> list[dict[str, Any]]:
         normalized = normalize_text(prompt)
         findings = []
 
+        # Avoid treating clearly framed educational examples and
+        # translation requests as direct override attempts.
+        benign_context = bool(
+            re.search(
+                r"\b(explain why|explain how|translate|translation of|"
+                r"discuss|describe|analyze|analyse)\b",
+                normalized,
+                re.IGNORECASE,
+            )
+        )
+
         for rule in self.rules:
-            if rule["compiled"].search(normalized):
-                findings.append(
-                    {
-                        key: rule[key]
-                        for key in ("name", "explanation", "weight", "category")
-                    }
-                )
+            if not rule["compiled"].search(normalized):
+                continue
+
+            if benign_context and rule["name"] in {
+                "Instruction override attempt",
+                "Developer instruction override",
+            }:
+                continue
+
+            findings.append(
+                {
+                    key: rule[key]
+                    for key in ("name", "explanation", "weight", "category")
+                }
+            )
 
         return findings
