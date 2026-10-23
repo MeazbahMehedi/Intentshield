@@ -11,6 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from promptguard.detectors.combined_detector import CombinedDetector
+from promptguard.detectors.risk_policy import is_attack_score
 from promptguard.services.metrics import calculate_metrics
 
 
@@ -23,7 +24,9 @@ def load_dataset(dataset_path=DATASET_PATH):
         cases = json.load(file)
 
     if not isinstance(cases, list) or not cases:
-        raise ValueError("The evaluation dataset must be a non-empty JSON list.")
+        raise ValueError(
+            "The evaluation dataset must be a non-empty JSON list."
+        )
 
     for case in cases:
         if not isinstance(case, dict):
@@ -31,7 +34,9 @@ def load_dataset(dataset_path=DATASET_PATH):
 
         for field in ("id", "prompt", "expected_label"):
             if field not in case:
-                raise ValueError(f"Dataset entry is missing required field: {field}")
+                raise ValueError(
+                    f"Dataset entry is missing required field: {field}"
+                )
 
         if case["expected_label"] not in {"attack", "safe"}:
             raise ValueError(
@@ -46,7 +51,8 @@ def predict_label(detector, prompt):
     """Convert the detector's risk assessment into an attack/safe label."""
     result = detector.analyze(prompt)
     score = result.get("score", 0)
-    return "attack" if score >= 25 else "safe"
+    return "attack" if is_attack_score(score) else "safe"
+
 
 def run_evaluation(dataset_path=DATASET_PATH):
     """Evaluate all cases and return metrics and individual predictions."""
@@ -89,6 +95,7 @@ def main():
     print(f"Precision:      {metrics['precision']:.1%}")
     print(f"Recall:         {metrics['recall']:.1%}")
     print(f"F1-score:       {metrics['f1_score']:.1%}")
+
     print("\nConfusion Matrix Counts")
     print(f"True positives:  {metrics['true_positive']}")
     print(f"True negatives:  {metrics['true_negative']}")
@@ -97,6 +104,7 @@ def main():
 
     print("\nIndividual Results")
     print("-" * 60)
+
     for item in details:
         status = "PASS" if item["correct"] else "MISS"
         print(

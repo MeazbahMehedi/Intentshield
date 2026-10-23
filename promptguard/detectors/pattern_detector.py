@@ -149,12 +149,7 @@ PATTERN_RULES: tuple[dict[str, Any], ...] = (
         "weight": 40,
         "category": "Prompt injection",
     },
-    {
-        "name": "Explosive device construction",
-        "pattern": r"\b(step.by.step|instructions?|guide|steps)\b.{0,100}\b(to\s+)?(construct|build|make|create|assemble|manufacture|constructing|building|making)\b.{0,80}\b(improvised explosive device|explosive device|ied)\b|\b(construct|build|make|create|assemble|manufacture|constructing|building|making)\b.{0,80}\b(improvised explosive device|explosive device|ied)\b",        "explanation": "Requests construction instructions for an explosive device.",
-        "weight": 85,
-        "category": "Dangerous request",
-    },
+
     {
         "name": "Hidden prompt extraction",
         "pattern": r"\b(reveal|print|show|output|repeat|disclose)\b.{0,50}\b(hidden prompt|secret prompt|internal prompt|system prompt)\b|\b(hidden prompt|secret prompt|internal prompt|system prompt)\b.{0,50}\b(before answering|exactly as written|verbatim)\b",
@@ -211,35 +206,21 @@ class PatternDetector(BaseDetector):
 
 
     def detect(self, prompt: str) -> list[dict[str, Any]]:
+        """Return all matching pattern-rule findings.
+
+        Context words such as "translate" or "describe" must not suppress
+        instruction-override findings elsewhere in the prompt.
+        """
         normalized = normalize_text(prompt)
         findings = []
 
-        # Avoid treating clearly framed educational examples and
-        # translation requests as direct override attempts.
-        benign_context = bool(
-            re.search(
-                r"\b(explain why|explain how|translate|translation of|"
-                r"discuss|describe|analyze|analyse)\b",
-                normalized,
-                re.IGNORECASE,
-            )
-        )
-
         for rule in self.rules:
-            if not rule["compiled"].search(normalized):
-                continue
-
-            if benign_context and rule["name"] in {
-                "Instruction override attempt",
-                "Developer instruction override",
-            }:
-                continue
-
-            findings.append(
-                {
-                    key: rule[key]
-                    for key in ("name", "explanation", "weight", "category")
-                }
-            )
+            if rule["compiled"].search(normalized):
+                findings.append(
+                    {
+                        key: rule[key]
+                        for key in ("name", "explanation", "weight", "category")
+                    }
+                )
 
         return findings
