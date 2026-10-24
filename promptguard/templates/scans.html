@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Scans{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span><span data-i18n="scans.eyebrow">SCAN HISTORY</span></div><h1 data-i18n="page.scans">Scans</h1><p class="page-subtitle" data-i18n="scans.subtitle">Search recent analysis records and export a copy for your project report.</p></div>
+  <div class="heading-actions"><a class="button button-secondary" href="{{ url_for('main.api_export', format='csv') }}">⇩ <span data-i18n="actions.exportCsv">Export CSV</span></a><a class="button button-secondary" href="{{ url_for('main.api_export', format='json') }}">⇩ <span data-i18n="actions.exportJson">Export JSON</span></a></div>
+</section>
+<section class="panel history-full-panel">
+  <div class="table-toolbar">
+    <label class="search-field"><span>⌕</span><input id="history-search" type="search" placeholder="Search prompt preview or risk..." data-i18n-placeholder="scans.searchPlaceholder"></label>
+    <label class="select-wrap"><span class="sr-only" data-i18n="scans.filterLabel">Filter by risk</span><select id="history-filter" class="select-control"><option value="all" data-i18n="scans.allRisk">All risk levels</option><option value="low" data-i18n="risk.low">Low</option><option value="medium" data-i18n="risk.medium">Medium</option><option value="high" data-i18n="risk.high">High</option><option value="harmful" data-i18n="scans.harmfulOnly">Harmful warning</option></select></label>
+    <span class="count-pill">{{ history|length }} <span data-i18n="scans.records">records</span></span>
+  </div>
+  {% if history %}
+  <div class="table-wrap">
+    <table class="data-table history-table filterable-table" id="history-table">
+      <thead><tr><th data-i18n="table.prompt">Input preview</th><th data-i18n="table.time">Time</th><th data-i18n="table.risk">Risk level</th><th data-i18n="table.score">Score</th><th data-i18n="table.rules">Rules matched</th><th data-i18n="table.contentAlert">Content alert</th></tr></thead>
+      <tbody>
+      {% for item in history %}
+        <tr data-risk="{{ item.level|lower }}" data-harmful="{{ 'true' if item.harmful else 'false' }}">
+          <td class="preview-cell"><a href="/scans/{{ item.id }}">{{ item.preview }}</a></td><td class="time-cell">{{ item.time }}</td>
+          <td><span class="risk-badge risk-{{ item.level|lower }}" data-risk-level="{{ item.level|lower }}">{{ item.level }}</span></td>
+          <td class="score-cell">{{ item.score }}/100</td><td>{{ item.findings }}</td>
+          <td>{% if item.harmful %}<span class="alert-mini"><i></i><span data-i18n="scans.harmfulYes">Warning</span></span>{% else %}<span class="muted-dash">—</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="empty-inline" id="history-no-match" hidden><span>⌕</span><span data-i18n="scans.noMatch">No scan records match this filter.</span></div>
+  {% else %}
+  <div class="empty-state"><div class="empty-state-icon">◷</div><strong data-i18n="scans.emptyTitle">No scan history yet</strong><p data-i18n="scans.emptyDesc">Run a scan from the Scan Report page and your recent records will appear here.</p><a class="button button-primary" href="{{ url_for('main.index') }}" data-i18n="scans.goScanner">Open scanner</a></div>
+  {% endif %}
+  <div class="panel-footnote"><span class="info-dot">i</span><span >Persistent workspace history: up to 2,000 records, with configurable retention. Evidence is redacted by default. UTC timestamps.</span></div>
+</section>
+{% endblock %}

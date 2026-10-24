@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Policies{% endblock %}
+{% block content %}
+{% include "policy_editor.html" %}
+<section class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span><span data-i18n="policies.eyebrow">DETECTION CONFIGURATION</span></div><h1 data-i18n="page.policies">Policies</h1><p class="page-subtitle" data-i18n="policies.subtitle">Review the local pattern detector, structured rules, and risk thresholds.</p></div>
+  <div class="heading-actions"><span class="count-pill">{{ pattern_rules|length + structured_rules|length }} <span data-i18n="policies.totalRules">active rules</span></span></div>
+</section>
+<section class="policy-thresholds">
+  <article class="panel threshold-card"><span class="risk-dot low-dot"></span><div><strong data-i18n="risk.low">Low</strong><p data-i18n="policies.lowText">Score below {{ medium_threshold }}.</p></div><b>0–{{ medium_threshold - 1 }}</b></article>
+  <article class="panel threshold-card"><span class="risk-dot medium-dot"></span><div><strong data-i18n="risk.medium">Medium</strong><p data-i18n="policies.mediumText">Score from {{ medium_threshold }} to {{ high_threshold - 1 }}.</p></div><b>{{ medium_threshold }}–{{ high_threshold - 1 }}</b></article>
+  <article class="panel threshold-card"><span class="risk-dot high-dot"></span><div><strong data-i18n="risk.high">High</strong><p data-i18n="policies.highText">Score of {{ high_threshold }} or above.</p></div><b>{{ high_threshold }}–100</b></article>
+</section>
+<section class="panel policy-panel">
+  <div class="section-heading"><div><div class="eyebrow" data-i18n="policies.patternEyebrow">REGEX PATTERNS</div><h2 data-i18n="policies.patternTitle">Pattern detector rules</h2><p data-i18n="policies.patternDesc">Built-in rules inspect normalized text for common injection signals.</p></div><span class="count-pill">{{ pattern_rules|length }}</span></div>
+  <div class="policy-list">
+    {% for rule in pattern_rules %}
+    <article class="policy-row"><div class="policy-row-icon">⌕</div><div class="policy-row-main"><strong data-rule-name="{{ rule.name }}">{{ rule.name }}</strong><p data-rule-explanation-for="{{ rule.name }}" data-rule-category="{{ rule.category }}">{{ rule.explanation }}</p><div class="policy-meta"><span data-category-label="{{ rule.category }}">{{ rule.category }}</span><span>Weight +{{ rule.weight }}</span></div></div><span class="policy-status"><i></i><span data-i18n="policies.enabled">Enabled</span></span></article>
+    {% endfor %}
+  </div>
+</section>
+<section class="panel policy-panel">
+  <div class="section-heading"><div><div class="eyebrow" data-i18n="policies.structuredEyebrow">MULTI-SIGNAL RULES</div><h2 data-i18n="policies.structuredTitle">Structured rules</h2><p data-i18n="policies.structuredDesc">Rules in rules.json combine terms that appear together in a prompt.</p></div><span class="count-pill">{{ structured_rules|length }}</span></div>
+  <div class="policy-list">
+    {% for rule in structured_rules %}
+    <article class="policy-row"><div class="policy-row-icon">⌘</div><div class="policy-row-main"><strong data-rule-name="{{ rule.name }}">{{ rule.name }}</strong><p data-rule-explanation-for="{{ rule.name }}" data-rule-category="{{ rule.category }}">{{ rule.explanation }}</p><div class="policy-meta"><span data-category-label="{{ rule.category }}">{{ rule.category }}</span><span>Weight +{{ rule.weight }}</span><span>{{ rule.all_terms|length }} <span data-i18n="policies.requiredTerms">required terms</span></span></div><div class="term-chips">{% for term in rule.all_terms %}<code>{{ term }}</code>{% endfor %}{% for term in rule.any_terms %}<code>{{ term }}</code>{% endfor %}</div></div><span class="policy-status"><i></i><span data-i18n="policies.enabled">Enabled</span></span></article>
+    {% endfor %}
+  </div>
+</section>
+<div class="callout callout-warning"><span class="notice-icon">!</span><div><strong data-i18n="policies.limitTitle">Heuristic limitation</strong><p data-i18n="policies.limitText">Rules match configured patterns and terms. They can miss new attacks or flag benign educational text; test changes against development data before using holdout data.</p></div></div>
+{% endblock %}

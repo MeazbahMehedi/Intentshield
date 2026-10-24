@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block content %}<div class="ops-heading"><span class="ops-chip">INTEGRATIONS</span><h1>Integrations</h1><p>Local screening works immediately. The optional gateway supports Ollama through its non-streaming generation API.</p></div><div class="ops-grid"><section class="panel ops-card"><h2>Local engine</h2><p>Regex and structured rules, bounded decoding, separate harmful-content and data checks, persistent SQLite evidence.</p><a class="button button-primary" href="/">Scan a prompt</a></section><section class="panel ops-card"><h2>Ollama backend</h2><p>Install Ollama, pull a model of your choice, and set PG_OLLAMA_MODEL before starting PromptGuard. PG_OLLAMA_URL defaults to http://127.0.0.1:11434. The browser cannot supply a backend URL.</p><a class="button button-secondary" href="/gateway">Open gateway</a></section><section class="panel ops-card ops-full"><h2>Application API</h2><p>Use a signed-in session with a CSRF token, or set PG_API_TOKEN and send an Authorization: Bearer header. The service token grants scan, batch, document and gateway access only. Server-side secrets are never sent to the browser.</p><pre class="ops-json">POST /api/scan
+{"prompt":"Summarize my notes."}
+
+POST /api/gateway
+{"prompt":"Explain unit testing.","backend":"demo"}
+
+POST /api/documents/scan
+{"content":"Retrieved document text","source":"retrieval","name":"notes.md"}</pre><p>Integration reference: <a href="https://github.com/ollama/ollama/blob/main/docs/api.md" rel="noreferrer">Ollama API documentation</a>. Reports and configuration details are in docs/API.md and docs/SECURITY.md.</p></section></div>{% endblock %}
