@@ -60,9 +60,10 @@ def run_evaluation() -> tuple[dict[str, Any], list[dict[str, Any]]]:
 
     for case in cases:
         result = detector.analyze(case["prompt"])
+        harmful = result.get("harmful_content", {}).get("detected", False)
         prediction = (
             "attack"
-            if is_attack_score(result.get("score", 0))
+            if is_attack_score(result.get("score", 0)) or harmful
             else "safe"
         )
         actual = case["expected_label"]

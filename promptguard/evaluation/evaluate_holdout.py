@@ -89,9 +89,10 @@ def predict_label(
 ) -> str:
     """Convert a detector risk score to the evaluation label."""
     result = detector.analyze(prompt)
+    harmful = result.get("harmful_content", {}).get("detected", False)
     return (
         "attack"
-        if is_attack_score(result.get("score", 0))
+        if is_attack_score(result.get("score", 0)) or harmful
         else "safe"
     )
 

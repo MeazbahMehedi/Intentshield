@@ -7,6 +7,7 @@ from typing import Any
 
 from .pattern_detector import PatternDetector
 from .rule_detector import RuleDetector
+from .harmful_content_detector import HarmfulContentDetector
 from .risk_policy import (
     HIGH_RISK_THRESHOLD,
     MAX_SCORE,
@@ -58,9 +59,11 @@ class CombinedDetector:
         self,
         pattern_detector: PatternDetector | None = None,
         rule_detector: RuleDetector | None = None,
+        harmful_detector: HarmfulContentDetector | None = None,
     ):
         self.pattern_detector = pattern_detector or PatternDetector()
         self.rule_detector = rule_detector or RuleDetector()
+        self.harmful_detector = harmful_detector or HarmfulContentDetector()
 
     def analyze(self, prompt: str) -> dict[str, Any]:
         if not isinstance(prompt, str):
@@ -103,20 +106,31 @@ class CombinedDetector:
                 "A low score does not prove the prompt is safe."
             )
 
+        if level == "High":
+            summary_zh = "检测到高风险模式。请在信任或执行此提示前检查匹配的信号。"
+        elif level == "Medium":
+            summary_zh = "检测到可能可疑的模式。请结合上下文检查匹配的信号。"
+        else:
+            summary_zh = "未检测到明显的已配置模式，但低分并不能证明提示是安全的。"
+
         categories = sorted(
             {finding["category"] for finding in findings}
         )
+        harmful_content = self.harmful_detector.detect(prompt)
 
         return {
             "score": score,
             "level": level,
             "css": css,
             "summary": summary,
+            "summary_zh": summary_zh,
             "findings": findings,
             "categories": categories,
             "detectors_used": [
                 "Pattern detector",
                 "Structured rule detector",
+                "Harmful-content detector",
             ],
             "assessment_type": "Heuristic rule match",
+            "harmful_content": harmful_content,
         }

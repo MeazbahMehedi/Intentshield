@@ -67,7 +67,8 @@ def predict_label(detector, prompt):
     """Convert a detector score into an attack/safe label."""
     result = detector.analyze(prompt)
     score = result.get("score", 0)
-    return "attack" if is_attack_score(score) else "safe"
+    harmful = result.get("harmful_content", {}).get("detected", False)
+    return "attack" if is_attack_score(score) or harmful else "safe"
 
 
 def run_evaluation(dataset_path=DATASET_PATH):

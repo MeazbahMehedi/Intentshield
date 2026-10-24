@@ -32,6 +32,16 @@ _INVISIBLE_FORMAT_RE = re.compile(
 
 _REPEATED_LETTERS_RE = re.compile(r"(.)\1{2,}", re.DOTALL)
 
+# Common Cyrillic/Greek lookalikes used in mixed-script obfuscation. Mapping is
+# applied only to text that already contains Latin letters, limiting changes to
+# ordinary non-Latin-language content.
+_CONFUSABLES = str.maketrans({
+    "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "х": "x",
+    "і": "i", "ј": "j", "у": "y", "к": "k", "м": "m", "т": "t",
+    "в": "b", "н": "h", "ο": "o", "ι": "i", "α": "a", "ε": "e",
+    "ρ": "p", "ν": "v", "τ": "t", "κ": "k",
+})
+
 
 def normalize_text(text: str) -> str:
     """Normalize text for detection without modifying the original prompt.
@@ -43,5 +53,7 @@ def normalize_text(text: str) -> str:
     normalized = unicodedata.normalize("NFKC", text)
     normalized = _INVISIBLE_FORMAT_RE.sub("", normalized)
     normalized = normalized.casefold()
+    if re.search(r"[a-z]", normalized) and re.search(r"[а-ео-рс-хіјукмтвнοιαερντκ]", normalized):
+        normalized = normalized.translate(_CONFUSABLES)
     normalized = _REPEATED_LETTERS_RE.sub(r"\1\1", normalized)
     return normalized

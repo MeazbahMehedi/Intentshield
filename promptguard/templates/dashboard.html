@@ -1,73 +1,60 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
-{% block top_actions %}
-  <select id="range" class="dash-select" aria-label="Time range">
-    <option value="day">Today</option><option value="week" selected>This week</option>
-    <option value="month">This month</option><option value="all">All time</option>
-  </select>
-  <a class="dash-btn" href="{{ url_for('main.api_export') }}">⤓ Download report</a>
-{% endblock %}
 {% block content %}
-<div id="empty-banner" class="dash-banner" hidden>
-  <div><strong>No scans saved yet.</strong> Scan a prompt on the Scanner page, or load sample prompts (analysed by the real detector, labelled “[demo]”).</div>
-  <button class="dash-btn" id="seed" type="button">Load sample data</button>
-</div>
-
-<!-- Stat cards -->
-<section class="dash-cards" aria-label="Summary">
-  {% for key, label, color in [('total','Total scans','#6e7bff'),('flagged','Flagged (Medium/High)','#ffbd69'),('high','High risk','#ff7389'),('avg','Average score','#56d6a0')] %}
-  <article class="dcard" style="--c:{{ color }}" data-key="{{ key }}">
-    <div class="dcard-label">{{ label }}</div>
-    <div class="dcard-row">
-      <div><div class="dcard-num" data-num>0</div><span class="dbadge" data-delta>–</span></div>
-      <div class="spark" data-spark aria-hidden="true"></div>
-    </div>
-    <div class="dcard-sub" data-sub>vs previous period</div>
-  </article>
-  {% endfor %}
+<section class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span><span data-i18n="dashboard.eyebrow">ANALYTICS</span></div><h1 data-i18n="page.dashboard">Dashboard</h1><p class="page-subtitle" data-i18n="dashboard.subtitle">A clear view of recent scan activity, risk levels, and matched rules.</p></div>
+  <div class="heading-actions">
+    <label class="select-wrap"><span class="sr-only" data-i18n="dashboard.rangeLabel">Time range</span><select id="range" class="select-control"><option value="day" data-i18n="dashboard.today">Last 24 hours</option><option value="week" selected data-i18n="dashboard.week">Last 7 days</option><option value="month" data-i18n="dashboard.month">Last 30 days</option><option value="all" data-i18n="dashboard.all">All recent records</option></select></label>
+    <a class="button button-secondary" href="{{ url_for('main.api_export', format='csv') }}"><span>⇩</span><span data-i18n="actions.export">Export report</span></a>
+  </div>
 </section>
 
-<div class="dash-grid">
-  <div class="dash-col">
-    <!-- Gauge -->
-    <section class="dpanel">
-      <h2>Risk distribution</h2><p class="dsub">How scans in this period were classified.</p>
-      <div class="gauge-wrap">
-        <svg viewBox="0 0 220 125" class="semi" role="img" aria-label="Risk distribution gauge">
-          <path d="M20 110A90 90 0 0 1 200 110" class="semi-bg" pathLength="100"/>
-          <g id="semi-segs"></g>
-        </svg>
-        <div class="semi-center"><small>Total scans</small><strong id="semi-total">0</strong></div>
+<div class="dashboard-notice" id="dashboard-note"><span class="notice-icon">i</span><span data-i18n="dashboard.sessionNote">Analytics use recent scan records retained in this browser session.</span><button type="button" id="seed" class="button button-quiet"><span>＋</span><span data-i18n="dashboard.sampleData">Load sample data</span></button></div>
+
+<section class="dashboard-stat-grid">
+  <article class="metric-card metric-cyan" data-metric="total"><div class="metric-top"><span data-i18n="metrics.total">Total Scans</span><span class="metric-icon">⌁</span></div><div class="metric-number" data-num>0</div><div class="metric-foot"><span class="metric-dot"></span><span data-i18n="dashboard.periodTotal">Scans in selected period</span></div></article>
+  <article class="metric-card metric-amber" data-metric="flagged"><div class="metric-top"><span data-i18n="metrics.failed">Flagged</span><span class="metric-icon">!</span></div><div class="metric-number" data-num>0</div><div class="metric-foot"><span class="metric-dot"></span><span data-i18n="dashboard.flaggedFoot">Medium or high injection risk</span></div></article>
+  <article class="metric-card metric-red" data-metric="high"><div class="metric-top"><span data-i18n="metrics.highRisk">High Risk</span><span class="metric-icon">×</span></div><div class="metric-number" data-num>0</div><div class="metric-foot"><span class="metric-dot"></span><span data-i18n="dashboard.highFoot">High-risk scans in period</span></div></article>
+  <article class="metric-card metric-purple" data-metric="avg"><div class="metric-top"><span data-i18n="metrics.average">Average Score</span><span class="metric-icon">◉</span></div><div class="metric-number" data-num>0</div><div class="metric-foot"><span class="metric-dot"></span><span data-i18n="dashboard.averageFoot">Mean heuristic score / 100</span></div></article>
+</section>
+
+<div class="dashboard-layout">
+  <div class="dashboard-left">
+    <section class="panel chart-panel">
+      <div class="section-heading"><div><div class="eyebrow" data-i18n="dashboard.distributionEyebrow">RISK OVERVIEW</div><h2 data-i18n="dashboard.distributionTitle">Risk distribution</h2><p data-i18n="dashboard.distributionDesc">How recent prompts were classified by the injection detector.</p></div><span class="panel-symbol">◉</span></div>
+      <div class="distribution-total"><strong id="distribution-total">0</strong><span data-i18n="dashboard.analyzed">prompts analyzed</span></div>
+      <div class="distribution-bar" id="distribution-bar"><span class="dist-low"></span><span class="dist-medium"></span><span class="dist-high"></span></div>
+      <div class="distribution-legend">
+        <div><span class="risk-dot low-dot"></span><span data-i18n="risk.low">Low</span><strong id="lv-Low">0</strong></div>
+        <div><span class="risk-dot medium-dot"></span><span data-i18n="risk.medium">Medium</span><strong id="lv-Medium">0</strong></div>
+        <div><span class="risk-dot high-dot"></span><span data-i18n="risk.high">High</span><strong id="lv-High">0</strong></div>
       </div>
-      <div class="legend3">
-        <div><i style="background:#56d6a0"></i>Low<b id="lv-Low">0</b></div>
-        <div><i style="background:#ffbd69"></i>Medium<b id="lv-Medium">0</b></div>
-        <div><i style="background:#ff7389"></i>High<b id="lv-High">0</b></div>
-      </div>
+      <div class="chart-empty" id="distribution-empty" hidden><span>◷</span><span data-i18n="dashboard.empty">No scan data for this period yet.</span></div>
     </section>
-    <!-- Top rules -->
-    <section class="dpanel">
-      <h2>Top matched rules</h2>
-      <table class="dtable"><thead><tr><th>Rule</th><th>Frequency</th><th>Hits</th></tr></thead><tbody id="rules-body"></tbody></table>
-      <p class="dsub" id="rules-empty" hidden>No rules matched in this period.</p>
+
+    <section class="panel chart-panel">
+      <div class="section-heading"><div><div class="eyebrow" data-i18n="dashboard.rulesEyebrow">DETECTION SIGNALS</div><h2 data-i18n="dashboard.rulesTitle">Top matched rules</h2><p data-i18n="dashboard.rulesDesc">Most frequently matched rules in retained scan history.</p></div><a class="text-link" href="{{ url_for('main.policies') }}"><span data-i18n="recommendations.view">View policies</span><span>↗</span></a></div>
+      <div class="table-wrap">
+        <table class="data-table rules-table"><thead><tr><th data-i18n="table.rule">Rule</th><th data-i18n="dashboard.frequency">Frequency</th><th data-i18n="table.hits">Hits</th></tr></thead><tbody id="rules-body"></tbody></table>
+      </div>
+      <div class="empty-inline" id="rules-empty" hidden><span>✓</span><span data-i18n="dashboard.noRules">No injection rules matched in this period.</span></div>
     </section>
   </div>
 
-  <!-- Bubble cluster with page tabs (navigation bar 3) -->
-  <section class="dpanel dpanel-tall">
-    <h2>Detection categories</h2><p class="dsub">Bubble size = number of scans that matched the category.</p>
-    <div class="ptabs" role="tablist" aria-label="Filter by risk level">
-      <button role="tab" aria-selected="true" data-lv="All">All</button>
-      <button role="tab" aria-selected="false" data-lv="High">High</button>
-      <button role="tab" aria-selected="false" data-lv="Medium">Medium</button>
-      <button role="tab" aria-selected="false" data-lv="Low">Low</button>
+  <section class="panel bubble-panel">
+    <div class="section-heading"><div><div class="eyebrow" data-i18n="dashboard.categoriesEyebrow">SIGNAL LANDSCAPE</div><h2 data-i18n="dashboard.categoriesTitle">Detection categories</h2><p data-i18n="dashboard.categoriesDesc">Bubble size represents the number of category matches.</p></div><span class="panel-symbol blue-symbol">✧</span></div>
+    <div class="filter-tabs" role="group" aria-label="Filter category bubbles" data-i18n-aria-label="dashboard.filterLabel">
+      <button type="button" class="filter-tab active" data-risk-filter="All" data-i18n="dashboard.filterAll">All</button>
+      <button type="button" class="filter-tab" data-risk-filter="High" data-i18n="risk.high">High</button>
+      <button type="button" class="filter-tab" data-risk-filter="Medium" data-i18n="risk.medium">Medium</button>
+      <button type="button" class="filter-tab" data-risk-filter="Low" data-i18n="risk.low">Low</button>
     </div>
-    <div class="bubbles-wrap">
-      <svg id="bubbles" viewBox="0 0 600 380" role="img" aria-label="Category bubbles"></svg>
-      <p class="dsub bubble-empty" id="bubble-empty" hidden>No category matches for this filter.</p>
+    <div class="bubble-chart-wrap">
+      <svg id="bubbles" viewBox="0 0 600 380" role="img" aria-label="Detection category bubbles"></svg>
+      <div class="chart-empty" id="bubble-empty" hidden><span>◌</span><span data-i18n="dashboard.noCategories">No category matches for this filter.</span></div>
     </div>
-    <div class="blegend" id="blegend"></div>
+    <div class="bubble-legend" id="bubble-legend"></div>
+    <div class="panel-footnote"><span class="info-dot">i</span><span data-i18n="dashboard.bubbleNote">Category counts come from matched injection findings, not from harmful-content warnings.</span></div>
   </section>
 </div>
 {% endblock %}
@@ -77,124 +64,155 @@
   "use strict";
   const $ = (s, r = document) => r.querySelector(s);
   const NS = "http://www.w3.org/2000/svg";
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const COLORS = ["#6e7bff", "#a45cff", "#18b5c9", "#4c8dd6", "#ff7ab8", "#56d6a0", "#ffbd69"];
-  let data = null, level = "All";
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const colors = ["#3bd8e8", "#7a8cff", "#9b8cff", "#51d6a2", "#ffbf69", "#ff7692", "#4c9fe8", "#d68aff"];
+  let data = null;
+  let selectedLevel = "All";
 
-  const svg = (tag, attrs = {}, kids = []) => {
-    const n = document.createElementNS(NS, tag);
-    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
-    kids.forEach((c) => n.append(c));
-    return n;
-  };
-  function countUp(node, to, decimals = 0) {
-    if (reduce) { node.textContent = to.toFixed(decimals); return; }
-    const from = 0, t0 = performance.now();
-    (function tick(now) {
-      const p = Math.min(1, (now - t0) / 900), e = 1 - Math.pow(1 - p, 3);
-      node.textContent = (from + (to - from) * e).toFixed(decimals);
-      if (p < 1) requestAnimationFrame(tick);
-    })(t0);
+  function svg(tag, attrs = {}) {
+    const node = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+    return node;
   }
-
-  function renderCards(d) {
-    document.querySelectorAll(".dcard").forEach((card, i) => {
-      const k = card.dataset.key, val = d.metrics[k], delta = d.delta[k];
-      card.style.animationDelay = i * 80 + "ms";
-      countUp($("[data-num]", card), val, k === "avg" ? 1 : 0);
-      const b = $("[data-delta]", card);
-      if (delta === null || delta === undefined) { b.textContent = "no prior data"; b.className = "dbadge flat"; }
-      else {
-        const up = delta >= 0, bad = k !== "total" && k !== "avg" ? up : false;
-        b.textContent = (up ? "↑ " : "↓ ") + Math.abs(delta) + "%";
-        b.className = "dbadge " + (bad ? "bad" : "good");
-      }
-      const sp = $("[data-spark]", card), vals = d.series[k] || d.series.total, max = Math.max(1, ...vals);
-      sp.replaceChildren(...vals.map((v, j) => {
-        const bar = document.createElement("i");
-        bar.title = d.days[j] + ": " + v;
-        bar.style.height = "4px"; bar.style.transitionDelay = j * 50 + "ms";
-        requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.height = Math.max(4, (v / max) * 46) + "px")));
-        return bar;
-      }));
+  function countUp(node, value) {
+    if (!node) return;
+    if (reduceMotion) { node.textContent = Number(value).toFixed(value % 1 ? 1 : 0); return; }
+    const start = performance.now();
+    const duration = 650;
+    function tick(now) {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      node.textContent = (Number(value) * eased).toFixed(Number(value) % 1 ? 1 : 0);
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  function renderMetrics(d) {
+    document.querySelectorAll("[data-metric]").forEach((card, index) => {
+      const key = card.dataset.metric;
+      countUp($("[data-num]", card), d.metrics[key] || 0);
+      card.style.animationDelay = (index * 70) + "ms";
     });
   }
-
-  function renderGauge(d) {
-    const total = d.metrics.total, g = $("#semi-segs");
-    g.replaceChildren();
-    let start = 0;
-    [["Low", "#56d6a0"], ["Medium", "#ffbd69"], ["High", "#ff7389"]].forEach(([lv, col]) => {
-      const n = d.levels[lv]; $("#lv-" + lv).textContent = n;
-      const len = total ? (n / total) * 100 : 0;
-      if (!len) return;
-      const seg = svg("path", { d: "M20 110A90 90 0 0 1 200 110", pathLength: 100, class: "semi-seg", stroke: col });
-      seg.style.strokeDasharray = "0 100"; seg.style.strokeDashoffset = -start;
-      g.append(seg);
-      const shown = Math.max(0, len - (len < 100 ? 1.2 : 0));
-      requestAnimationFrame(() => requestAnimationFrame(() => (seg.style.strokeDasharray = shown + " " + (100 - shown))));
-      start += len;
+  function renderDistribution(d) {
+    const total = d.metrics.total || 0;
+    $("#distribution-total").textContent = total;
+    $("#distribution-empty").hidden = total > 0;
+    ["Low", "Medium", "High"].forEach((level) => {
+      $("#lv-" + level).textContent = d.levels[level] || 0;
     });
-    countUp($("#semi-total"), total);
+    const low = total ? (d.levels.Low / total) * 100 : 0;
+    const medium = total ? (d.levels.Medium / total) * 100 : 0;
+    const high = total ? (d.levels.High / total) * 100 : 0;
+    const spans = $("#distribution-bar").querySelectorAll("span");
+    spans[0].style.width = low + "%";
+    spans[1].style.width = medium + "%";
+    spans[2].style.width = high + "%";
   }
-
   function renderRules(d) {
-    const body = $("#rules-body"), max = Math.max(1, ...d.top_rules.map((r) => r.hits));
+    const body = $("#rules-body");
+    body.replaceChildren();
     $("#rules-empty").hidden = d.top_rules.length > 0;
-    body.replaceChildren(...d.top_rules.map((r) => {
-      const tr = document.createElement("tr"), a = document.createElement("td"), b = document.createElement("td"), c = document.createElement("td");
-      a.textContent = r.name; c.textContent = r.hits;
-      const filled = Math.max(1, Math.round((r.hits / max) * 6)), bars = document.createElement("div");
-      bars.className = "sev";
-      for (let i = 0; i < 6; i++) { const s = document.createElement("i"); if (i < filled) s.className = "on"; bars.append(s); }
-      b.append(bars); tr.append(a, b, c); return tr;
-    }));
+    const max = Math.max(1, ...d.top_rules.map((rule) => rule.hits));
+    d.top_rules.forEach((rule, index) => {
+      const tr = document.createElement("tr");
+      const name = document.createElement("td");
+      const freq = document.createElement("td");
+      const hits = document.createElement("td");
+      name.textContent = window.promptGuardTranslateRuleName ? window.promptGuardTranslateRuleName(rule.name) : rule.name;
+      const track = document.createElement("div");
+      track.className = "frequency-track";
+      const fill = document.createElement("span");
+      fill.style.width = ((rule.hits / max) * 100) + "%";
+      track.append(fill);
+      freq.append(track);
+      hits.textContent = rule.hits;
+      tr.style.animationDelay = (index * 45) + "ms";
+      tr.append(name, freq, hits);
+      body.append(tr);
+    });
   }
-
   function renderBubbles() {
-    const root = $("#bubbles"), legend = $("#blegend");
-    root.replaceChildren(); legend.replaceChildren();
-    const items = Object.entries(data.categories)
-      .map(([name, c]) => [name, level === "All" ? c.High + c.Medium + c.Low : c[level]])
-      .filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+    if (!data) return;
+    const root = $("#bubbles");
+    const legend = $("#bubble-legend");
+    root.replaceChildren();
+    legend.replaceChildren();
+    const items = Object.entries(data.categories || {}).map(([name, levels]) => {
+      const count = selectedLevel === "All"
+        ? (levels.Low || 0) + (levels.Medium || 0) + (levels.High || 0)
+        : (levels[selectedLevel] || 0);
+      return { name, count };
+    }).filter((item) => item.count > 0).sort((a, b) => b.count - a.count).slice(0, 12);
     $("#bubble-empty").hidden = items.length > 0;
     if (!items.length) return;
-    const cx = 300, cy = 190, max = items[0][1];
-    [[250, 150, 0], [185, 105, 1]].forEach(([rx, ry, k]) => root.append(svg("ellipse", { cx, cy, rx, ry, class: "orbit orbit-" + k })));
-    items.forEach(([name, n], i) => {
-      const r = 30 + Math.sqrt(n / max) * 42;
-      const ang = ((i - 1) / Math.max(1, items.length - 1)) * Math.PI * 2 - Math.PI / 2;
-      const x = i === 0 ? cx : cx + Math.cos(ang) * 225, y = i === 0 ? cy : cy + Math.sin(ang) * 135;
-      const col = COLORS[i % COLORS.length];
-      const grp = svg("g", { class: "bub", style: "--d:" + (i * 0.6) + "s;--dur:" + (5 + (i % 3)) + "s" });
-      const inner = svg("g", { transform: "translate(" + x + " " + y + ")" });
-      const pop = svg("g", { class: "pop", style: "animation-delay:" + i * 90 + "ms" });
-      const title = svg("title"); title.textContent = name + ": " + n + " scan" + (n === 1 ? "" : "s");
-      const t = svg("text", { class: "bnum", "text-anchor": "middle", dy: ".35em" }); t.textContent = n;
-      pop.append(title, svg("circle", { r, fill: col, opacity: 0.85 }), svg("circle", { r: r * 0.66, class: "bin" }), svg("circle", { r: r * 0.66, class: "bring", stroke: col }), t);
-      inner.append(pop); grp.append(inner); root.append(grp);
-      const li = document.createElement("span"), dot = document.createElement("i");
-      dot.style.background = col; li.append(dot, document.createTextNode(name)); legend.append(li);
+    const max = Math.max(1, items[0].count);
+    const positions = [
+      [300, 185], [145, 95], [455, 90], [155, 280], [455, 280], [300, 65],
+      [300, 305], [80, 185], [520, 185], [220, 120], [385, 245], [380, 125]
+    ];
+    items.forEach((item, index) => {
+      const [x, y] = positions[index % positions.length];
+      const radius = 20 + Math.sqrt(item.count / max) * 45;
+      const group = svg("g", { class: "bubble-node" });
+      group.style.animationDelay = (index * 55) + "ms";
+      const title = svg("title");
+      const displayName = window.promptGuardTranslateCategory ? window.promptGuardTranslateCategory(item.name) : item.name;
+      title.textContent = displayName + ": " + item.count;
+      const circle = svg("circle", { cx: x, cy: y, r: radius, fill: colors[index % colors.length], opacity: ".20", stroke: colors[index % colors.length], "stroke-width": "1.5" });
+      const inner = svg("circle", { cx: x, cy: y, r: Math.max(13, radius * .66), fill: colors[index % colors.length], opacity: ".10" });
+      const num = svg("text", { x, y: y + 5, "text-anchor": "middle", class: "bubble-count" });
+      num.textContent = item.count;
+      const label = svg("text", { x, y: y + radius + 15, "text-anchor": "middle", class: "bubble-label" });
+      const labelText = displayName.length > 18 ? displayName.slice(0, 16) + "…" : displayName;
+      label.textContent = labelText;
+      group.append(title, circle, inner, num, label);
+      root.append(group);
+
+      const legendItem = document.createElement("span");
+      const dot = document.createElement("i");
+      dot.style.background = colors[index % colors.length];
+      const labelNode = document.createElement("span");
+      labelNode.textContent = displayName + " · " + item.count;
+      legendItem.append(dot, labelNode);
+      legend.append(legendItem);
     });
   }
-
-  async function load() {
+  async function loadDashboard() {
     try {
-      const res = await fetch("/api/dashboard?range=" + $("#range").value);
-      data = await res.json();
-    } catch { return; }
-    $("#empty-banner").hidden = data.metrics.total > 0 || Object.keys(data.categories).length > 0;
-    renderCards(data); renderGauge(data); renderRules(data); renderBubbles();
+      const response = await fetch("/api/dashboard?range=" + encodeURIComponent($("#range").value), { headers: { "Accept": "application/json" } });
+      if (!response.ok) throw new Error("Dashboard request failed");
+      data = await response.json();
+      renderMetrics(data);
+      renderDistribution(data);
+      renderRules(data);
+      renderBubbles();
+    } catch (error) {
+      $("#dashboard-note").classList.add("notice-error");
+      const note = $("#dashboard-note").querySelector("span:nth-child(2)");
+      if (note) note.textContent = window.promptGuardGetLanguage && window.promptGuardGetLanguage() === "zh" ? "无法加载仪表盘数据，请刷新页面后重试。" : "Dashboard data could not be loaded. Please refresh and try again.";
+    }
   }
-
-  $("#range").addEventListener("change", load);
-  document.querySelectorAll(".ptabs button").forEach((b) => b.addEventListener("click", () => {
-    document.querySelectorAll(".ptabs button").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
-    level = b.dataset.lv; if (data) renderBubbles();
-  }));
-  $("#seed").addEventListener("click", async () => { await fetch("/api/seed-demo", { method: "POST" }); load(); });
-  setInterval(() => { if (!document.hidden) load(); }, 30000);
-  load();
+  $("#range").addEventListener("change", loadDashboard);
+  window.addEventListener("promptguard:languagechange", renderBubbles);
+  document.querySelectorAll("[data-risk-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("[data-risk-filter]").forEach((item) => item.classList.toggle("active", item === button));
+      selectedLevel = button.dataset.riskFilter;
+      renderBubbles();
+    });
+  });
+  $("#seed").addEventListener("click", async () => {
+    const button = $("#seed");
+    button.disabled = true;
+    try {
+      await fetch("/api/seed-demo", { method: "POST" });
+      await loadDashboard();
+    } finally {
+      button.disabled = false;
+    }
+  });
+  loadDashboard();
 })();
 </script>
 {% endblock %}

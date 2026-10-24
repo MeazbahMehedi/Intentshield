@@ -48,10 +48,11 @@ def load_dataset(dataset_path=DATASET_PATH):
 
 
 def predict_label(detector, prompt):
-    """Convert the detector's risk assessment into an attack/safe label."""
+    """Classify as attack when injection risk or the independent harmful warning is positive."""
     result = detector.analyze(prompt)
     score = result.get("score", 0)
-    return "attack" if is_attack_score(score) else "safe"
+    harmful = result.get("harmful_content", {}).get("detected", False)
+    return "attack" if is_attack_score(score) or harmful else "safe"
 
 
 def run_evaluation(dataset_path=DATASET_PATH):
