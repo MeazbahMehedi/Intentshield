@@ -1,7 +1,6 @@
 """PromptGuard pages and local API endpoints.
 
-All analysis is performed locally. Scan history is kept in the signed Flask
-session cookie and is intentionally limited to recent metadata.
+Scans are recorded in SQLite with a session-scoped workspace identity.
 """
 from __future__ import annotations
 
@@ -9,17 +8,21 @@ import csv
 import io
 import json
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from flask import Blueprint, Response, jsonify, redirect, render_template, request, session, url_for
+from flask import Blueprint, Response, abort, has_request_context, jsonify, redirect, render_template, request, session, url_for
 
-from promptguard.detectors import CombinedDetector
+from promptguard.services.engine import LayeredEngine
+from promptguard.database.db import history as stored_history, settings, db, owner, audit
+from promptguard.services.storage import save_scan
+from promptguard.services.policy import DEFAULTS
+from promptguard.security import admin_required
 from promptguard.detectors.pattern_detector import PATTERN_RULES
 from promptguard.detectors.risk_policy import HIGH_RISK_THRESHOLD, MEDIUM_RISK_THRESHOLD
 
 main_bp = Blueprint("main", __name__)
-_detector = CombinedDetector()
+_detector = LayeredEngine()
 _DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 MAX_PROMPT_CHARS = 10000
 MAX_BATCH_ITEMS = 50
@@ -87,7 +90,7 @@ PROBES = [
 
 def analyze_prompt(prompt: str) -> dict:
     """Compatibility wrapper around the combined local detection engine."""
-    return _detector.analyze(prompt)
+    return _detector.analyze(prompt, policy={**DEFAULTS, **settings()} if has_request_context() else DEFAULTS)
 
 
 def _load_rules() -> dict:
@@ -98,25 +101,7 @@ def _load_rules() -> dict:
 
 
 def _record_scan(prompt: str, result: dict, demo: bool = False) -> None:
-    history = session.get("history", [])
-    history.insert(0, {
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "preview": ("[demo] " if demo else "") + prompt[:72].replace("\n", " "),
-        "level": result["level"],
-        "score": result["score"],
-        "findings": len(result["findings"]),
-        "rule_names": [finding["name"] for finding in result["findings"][:3]],
-        "categories": result.get("categories", [])[:4],
-        "harmful": bool(result.get("harmful_content", {}).get("detected")),
-        "harmful_categories": result.get("harmful_content", {}).get("categories", [])[:2],
-    })
-    session["history"] = history[:8]
-
-    session["scan_count"] = int(session.get("scan_count", 0)) + 1
-    session["flagged_count"] = int(session.get("flagged_count", 0)) + int(result["level"] in ("Medium", "High"))
-    session["high_risk_count"] = int(session.get("high_risk_count", 0)) + int(result["level"] == "High")
-    session["harmful_count"] = int(session.get("harmful_count", 0)) + int(bool(result.get("harmful_content", {}).get("detected")))
-    session.modified = True
+    save_scan(prompt, result, demo)
 
 
 def _summary_from_history(history: list[dict]) -> dict:
@@ -156,14 +141,15 @@ def index():
     error = None
 
     if request.method == "POST":
-        prompt = request.form.get("prompt", "").strip()[:10000]
+        prompt = request.form.get("prompt", "").strip()
+        if len(prompt)>MAX_PROMPT_CHARS: abort(413, description="Text exceeds 10,000 characters.")
         if prompt:
             result = analyze_prompt(prompt)
             _record_scan(prompt, result)
         else:
             error = "Please enter a prompt before scanning."
 
-    history = session.get("history", [])
+    history = stored_history()
     summary = _summary_from_history(history)
     return render_template(
         "index.html",
@@ -174,10 +160,10 @@ def index():
         error=error,
         history=history,
         summary=summary,
-        total_scans=int(session.get("scan_count", len(history))),
-        threats=int(session.get("flagged_count", summary["metrics"]["flagged"])),
-        high_risk=int(session.get("high_risk_count", summary["metrics"]["high"])),
-        harmful_count=int(session.get("harmful_count", sum(1 for item in history if item.get("harmful")))),
+        total_scans=len(history),
+        threats=summary["metrics"]["flagged"],
+        high_risk=summary["metrics"]["high"],
+        harmful_count=sum(1 for item in history if item.get("harmful")),
         probes=PROBES,
         medium_threshold=MEDIUM_RISK_THRESHOLD,
         high_threshold=HIGH_RISK_THRESHOLD,
@@ -185,40 +171,40 @@ def index():
 
 
 def _stats() -> dict:
-    history = session.get("history", [])
-    return {
-        "total_scans": int(session.get("scan_count", len(history))),
-        "threats": int(session.get("flagged_count", sum(1 for item in history if item.get("level") in ("Medium", "High")))),
-        "high_risk": int(session.get("high_risk_count", sum(1 for item in history if item.get("level") == "High"))),
-        "harmful_count": int(session.get("harmful_count", sum(1 for item in history if item.get("harmful")))),
-    }
+    entries = stored_history()
+    return {"total_scans":len(entries), "threats":sum(x["level"] in ("Medium","High") for x in entries), "high_risk":sum(x["level"]=="High" for x in entries), "harmful_count":sum(x["harmful"] for x in entries)}
 
 
 @main_bp.post("/api/scan")
 def api_scan():
     """Compatibility JSON endpoint for one-prompt scans."""
-    data = request.get_json(silent=True) or {}
-    prompt = str(data.get("prompt", "")).strip()[:MAX_PROMPT_CHARS]
+    from promptguard.routes.advanced import payload, prompt_value
+    data = payload()
+    prompt = prompt_value(data)
     if not prompt:
         return jsonify({"error": "Please enter a prompt before scanning."}), 400
     result = analyze_prompt(prompt)
     _record_scan(prompt, result)
-    return jsonify({"result": result, "history_entry": session.get("history", [{}])[0], "stats": _stats()})
+    return jsonify({"result": result, "history_entry": stored_history()[0], "stats": _stats()})
 
 
 @main_bp.post("/api/batch")
 def api_batch():
     """Compatibility endpoint for scanning up to 50 newline-independent prompts."""
-    data = request.get_json(silent=True) or {}
+    from promptguard.routes.advanced import payload
+    data = payload()
     items = data.get("prompts", [])
     if not isinstance(items, list):
         return jsonify({"error": "'prompts' must be a list."}), 400
-    prompts = [str(item).strip()[:MAX_PROMPT_CHARS] for item in items if str(item).strip()][:MAX_BATCH_ITEMS]
+    if len(items)>MAX_BATCH_ITEMS or any(not isinstance(x,str) or len(x)>MAX_PROMPT_CHARS for x in items):
+        return jsonify(error="At most 50 text prompts of 10,000 characters each are accepted."),400
+    prompts = [x.strip() for x in items if x.strip()]
     if not prompts:
         return jsonify({"error": "Provide at least one non-empty prompt."}), 400
     rows = []
     for item in prompts:
         result = analyze_prompt(item)
+        _record_scan(item, result)
         rows.append({
             "prompt": item,
             "score": result["score"],
@@ -227,6 +213,7 @@ def api_batch():
             "categories": result["categories"],
             "findings": [finding["name"] for finding in result["findings"]],
             "harmful_content": result.get("harmful_content", {}),
+            "decision": result["decision"], "scan_id":result["scan_id"],
         })
     return jsonify({"rows": rows, "count": len(rows)})
 
@@ -237,7 +224,7 @@ def dashboard():
         "dashboard.html",
         page_key="dashboard",
         page_title="Dashboard",
-        summary=_summary_from_history(session.get("history", [])),
+        summary=_summary_from_history(stored_history()),
     )
 
 
@@ -247,7 +234,7 @@ def scans():
         "scans.html",
         page_key="scans",
         page_title="Scans",
-        history=session.get("history", []),
+        history=stored_history(),
     )
 
 
@@ -285,16 +272,16 @@ def integrations():
     return render_template("integrations.html", page_key="integrations", page_title="Integrations")
 
 
-@main_bp.get("/settings")
-def settings():
+@main_bp.get("/settings", endpoint="settings")
+def settings_page():
     return render_template("settings.html", page_key="settings", page_title="Settings")
 
 
 @main_bp.get("/api/dashboard")
 def api_dashboard():
-    history = session.get("history", [])
+    history = stored_history()
     requested_range = request.args.get("range", "week")
-    now = datetime.now()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if requested_range == "day":
         cutoff = now - timedelta(days=1)
     elif requested_range == "month":
@@ -314,7 +301,7 @@ def api_dashboard():
             filtered.append(item)
 
     summary = _summary_from_history(filtered)
-    chronological = list(reversed(filtered[-7:]))
+    chronological = list(reversed(filtered[:30]))
     days = [item.get("time", "")[-8:-3] or f"Scan {i+1}" for i, item in enumerate(chronological)]
     if not days:
         days = ["—"]
@@ -330,13 +317,13 @@ def api_dashboard():
         "series": series,
         "delta": {"total": None, "flagged": None, "high": None, "avg": None},
         "range": requested_range,
-        "note": "Dashboard analytics are based on recent records retained in this browser session.",
+        "note": "Persistent workspace records, retained according to your privacy policy. Timestamps are UTC.",
     })
 
 
 @main_bp.get("/api/export")
 def api_export():
-    history = session.get("history", [])
+    history = stored_history()
     export_format = request.args.get("format", "csv").lower()
     fields = ["time", "preview", "level", "score", "findings", "harmful", "categories"]
     if export_format == "json":
@@ -351,6 +338,8 @@ def api_export():
     for item in history:
         row = dict(item)
         row["categories"] = ", ".join(row.get("categories", []))
+        for key,value in row.items():
+            if isinstance(value,str) and value.startswith(("=","+","-","@","\t","\r")): row[key]="\'"+value
         writer.writerow(row)
     return Response(
         output.getvalue(),
@@ -376,7 +365,9 @@ def seed_demo():
 
 @main_bp.post("/api/clear-session")
 def clear_session():
-    session.clear()
+    db().execute("DELETE FROM scans WHERE owner=?",(owner(),))
+    db().commit()
+    audit("history_cleared",{})
     return jsonify({"ok": True})
 
 

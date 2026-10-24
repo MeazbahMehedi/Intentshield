@@ -2,6 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071525">
   <title>{% block title %}{{ page_title|default("PromptGuard") }}{% endblock %} · PromptGuard</title>
@@ -9,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced.css') }}">
 </head>
 <body>
   <div class="app-shell">
@@ -29,6 +31,12 @@
         <a class="nav-item {% if page_key == 'policies' %}active{% endif %}" href="{{ url_for('main.policies') }}"><span class="nav-icon">⛨</span><span data-i18n="nav.policies">Policies</span>{% if page_key == 'policies' %}<i class="nav-active-dot"></i>{% endif %}</a>
       </nav>
 
+      <div class="nav-label nav-label-spaced">SECURITY OPERATIONS</div>
+      <nav class="main-nav" aria-label="Security operations">
+        {% for path, label, icon in [('/lab','Evaluation Lab','◈'),('/documents','Untrusted Sources','▤'),('/gateway','Security Gateway','⇄'),('/audit','Audit Trail','◷'),('/developers','Developers','◇')] %}
+        <a class="nav-item {% if request.path == path %}active{% endif %}" href="{{ path }}"><span class="nav-icon">{{ icon }}</span><span>{{ label }}</span></a>
+        {% endfor %}
+      </nav>
       <div class="nav-label nav-label-spaced" data-i18n="nav.resources">RESOURCES</div>
       <nav class="main-nav" aria-label="Resources navigation">
         <a class="nav-item {% if page_key == 'knowledge' %}active{% endif %}" href="{{ url_for('main.knowledge_base') }}"><span class="nav-icon">▤</span><span data-i18n="nav.knowledge">Knowledge Base</span>{% if page_key == 'knowledge' %}<i class="nav-active-dot"></i>{% endif %}</a>
@@ -42,7 +50,7 @@
         <div class="workspace-copy"><strong data-i18n="workspace.name">Default Workspace</strong><small data-i18n="workspace.mode">Local analysis mode</small></div>
         <span class="workspace-chevron">⌄</span>
       </div>
-      <div class="sidebar-status"><span class="status-dot"></span><div><strong data-i18n="status.local">Local engine ready</strong><small data-i18n="status.private">Prompts stay in this app</small></div></div>
+      <div class="sidebar-status"><span class="status-dot"></span><div><strong data-i18n="status.local">Local engine ready</strong><small >Local scans; optional model forwarding</small></div></div>
     </aside>
     <div class="sidebar-scrim" id="sidebar-scrim"></div>
 
@@ -60,6 +68,7 @@
             <button type="button" data-lang="zh" class="lang-button" aria-pressed="false">中文</button>
           </div>
           <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme" data-i18n-title="theme.toggle" data-i18n-aria-label="theme.toggle"><span class="theme-icon" aria-hidden="true">◐</span></button>
+          {% if session.get('user') %}<form method="post" action="/logout"><button class="button button-secondary">Sign out {{ session.user }}</button></form>{% endif %}
           <div class="user-avatar" title="PromptGuard local workspace">PG</div>
         </div>
       </header>
@@ -70,7 +79,9 @@
       <footer class="app-footer"><span>PromptGuard</span><span class="footer-dot">·</span><span data-i18n="footer.note">Heuristic prompt-injection and harmful-content screening</span><span class="footer-right" data-i18n="footer.disclaimer">For education and evaluation — not a security guarantee</span></footer>
     </main>
   </div>
+  <script src="{{ url_for('static', filename='js/security.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/advanced.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

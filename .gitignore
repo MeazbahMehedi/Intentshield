@@ -3,8 +3,11 @@ venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
-instance/*.db
-instance/*.sqlite
-instance/*.sqlite3
-.idea/
-.vscode/
+instance/
+*.sqlite3
+*.sqlite3-*
+.env
+.env.*
+!.env.example
+qa/*.png
+*.log

@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
     "dashboard.week": "最近 7 天",
     "dashboard.month": "最近 30 天",
     "dashboard.all": "全部近期记录",
-    "dashboard.sessionNote": "分析数据来自此浏览器会话中保留的近期扫描记录。",
+    "dashboard.sessionNote": "分析数据来自本地数据库中按工作区保存的扫描记录。",
     "dashboard.sampleData": "加载示例数据",
     "dashboard.periodTotal": "所选时间段的扫描数",
     "dashboard.flaggedFoot": "中风险或高风险提示注入",
@@ -252,7 +252,7 @@ document.addEventListener("DOMContentLoaded", function () {
     "settings.languageDesc": "支持英语和简体中文。",
     "settings.sessionEyebrow": "本地数据",
     "settings.sessionTitle": "会话控制",
-    "settings.sessionDesc": "此原型会在 Flask 浏览器会话中保存少量近期扫描元数据。",
+    "settings.sessionDesc": "扫描记录保存在本地 SQLite 数据库中，保留时间由策略配置。",
     "settings.clearTitle": "清除近期扫描会话",
     "settings.clearDesc": "清除此浏览器会话中的计数器和近期扫描记录。",
     "settings.clearButton": "清除会话",
@@ -666,7 +666,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!response.ok) throw new Error("Could not clear the session.");
       if (feedback) {
         feedback.hidden = false;
-        feedback.textContent = language === "zh" ? "已清除本地扫描会话。" : "The local scan session has been cleared.";
+        feedback.textContent = language === "zh" ? "已清除本地扫描会话。" : "Your retained scan history has been cleared.";
       }
     } catch (_) {
       if (feedback) {

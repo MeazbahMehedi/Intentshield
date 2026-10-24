@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Scan Report{% endblock %}
 {% block content %}
+{% if result %}{% include "report_layers.html" %}{% endif %}
 <section class="page-heading">
   <div>
     <div class="eyebrow"><span class="eyebrow-line"></span><span data-i18n="report.eyebrow">SECURITY ASSESSMENT</span><span class="eyebrow-tag">LOCAL</span></div>
@@ -9,7 +10,7 @@
     <div class="report-meta">
       <span><span class="meta-icon">◷</span><span data-i18n="report.timestamp">Latest local analysis</span></span>
       <span class="meta-separator">|</span>
-      <span><span class="meta-icon">◇</span><span data-i18n="report.model">Model: rule-based local engine</span></span>
+      <span><span class="meta-icon">◇</span><span >Layered detection + configurable policy</span></span>
       <span class="meta-separator">|</span>
       <span><span class="meta-icon">▤</span><span data-i18n="report.framework">Framework: OWASP LLM Top 10 concepts</span></span>
     </div>
@@ -22,7 +23,7 @@
 
 <section class="overview-grid" aria-label="Security overview">
   <article class="panel score-panel">
-    <div class="panel-kicker"><span data-i18n="report.securityScore">Security Score</span><span class="info-dot" title="Heuristic indicator, not a probability" data-i18n-title="report.scoreTooltip">i</span></div>
+    <div class="panel-kicker"><span >Combined signal score</span><span class="info-dot" title="Heuristic indicator, not a probability" data-i18n-title="report.scoreTooltip">i</span></div>
     {% set score_value = result.score if result else 0 %}
     {% set score_level = result.level if result else "Low" %}
     <div class="score-content">
@@ -48,7 +49,7 @@
   <article class="metric-card metric-cyan">
     <div class="metric-top"><span data-i18n="metrics.total">Total Scans</span><span class="metric-icon">⌁</span></div>
     <div class="metric-number" data-counter="{{ total_scans }}">{{ total_scans }}</div>
-    <div class="metric-foot"><span class="metric-dot"></span><span data-i18n="metrics.totalFoot">Scans in this session</span></div>
+    <div class="metric-foot"><span class="metric-dot"></span><span >Retained workspace scans</span></div>
   </article>
   <article class="metric-card metric-green">
     <div class="metric-top"><span data-i18n="metrics.passed">Passed</span><span class="metric-icon">✓</span></div>
@@ -145,12 +146,12 @@
       {% else %}
       <div class="empty-state"><div class="empty-state-icon">⌕</div><strong data-i18n="findings.awaiting">Your scan evidence will appear here</strong><p data-i18n="findings.awaitingDesc">Submit a prompt above to view matched rules, categories, and explanations.</p></div>
       {% endif %}
-      <div class="panel-footnote"><span class="info-dot">i</span><span data-i18n="findings.disclaimer">The injection score is a weighted heuristic indicator, not a probability or a guarantee of safety.</span></div>
+      <div class="panel-footnote"><span class="info-dot">i</span><span >The combined score includes legacy safety patterns; use the separate injection score and policy decision above.</span></div>
     </section>
 
     <section class="panel recent-panel" id="recent-scans">
       <div class="section-heading compact-heading">
-        <div><div class="eyebrow" data-i18n="history.eyebrow">ACTIVITY</div><h2 data-i18n="history.title">Recent scans</h2><p data-i18n="history.subtitle">Recent records retained in this browser session.</p></div>
+        <div><div class="eyebrow" data-i18n="history.eyebrow">ACTIVITY</div><h2 data-i18n="history.title">Recent scans</h2><p data-i18n="history.subtitle">Persistent workspace records, subject to the retention policy.</p></div>
         <a class="text-link" href="{{ url_for('main.scans') }}"><span data-i18n="history.viewAll">View all scans</span><span aria-hidden="true">↗</span></a>
       </div>
       {% if history %}

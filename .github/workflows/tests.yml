@@ -1,40 +1,23 @@
-name: PromptGuard Tests
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
+name: PromptGuard verification
+on: [push, pull_request]
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
+  tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        ml: [false, true]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest
-          if [ -f requirements.txt ]; then
-            python -m pip install -r requirements.txt
-          fi
-
-      - name: Run test suite
-        run: python -m pytest -q
-
-      - name: Run main evaluation
-        run: python -m promptguard.evaluation.evaluate
-
-      - name: Run robustness evaluation
-        run: python -m promptguard.evaluation.evaluate_robustness
-
-      - name: Run holdout evaluation
-        run: python -m promptguard.evaluation.evaluate_holdout
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - if: matrix.ml
+        run: python -m pip install -r requirements-ml.txt
+      - run: python -m pytest -q
+      - run: python manage.py evaluate --split holdout --mode hybrid --output evaluation.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-${{ matrix.os }}-ml-${{ matrix.ml }}
+          path: evaluation.json

@@ -1,2 +1,8 @@
--- Tables for evaluation history will be added in a later milestone.
--- This file is intentionally empty of CREATE statements for now.
+
+CREATE TABLE IF NOT EXISTS scans(id TEXT PRIMARY KEY, owner TEXT NOT NULL, stamp REAL NOT NULL, data TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS scan_owner ON scans(owner, stamp);
+CREATE TABLE IF NOT EXISTS settings(owner TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS experiments(id TEXT PRIMARY KEY, owner TEXT NOT NULL, stamp REAL NOT NULL, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, owner TEXT NOT NULL, stamp REAL NOT NULL, event TEXT NOT NULL, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS users(name TEXT PRIMARY KEY, password TEXT NOT NULL, role TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS limits(bucket TEXT PRIMARY KEY, window REAL NOT NULL, hits INTEGER NOT NULL);
