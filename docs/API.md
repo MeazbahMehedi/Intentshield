@@ -56,6 +56,7 @@ Gateway status: `completed`, `stopped`, `tool_denied`, `output_suppressed`, `bac
 | GET `/api/export?format=csv|json` | Scoped retained scans; CSV cells neutralize formula prefixes |
 | POST `/api/seed-demo` | Add clearly marked demonstration scans |
 | POST `/api/clear-session` | Delete workspace scan history; keeps login, policy and audit metadata |
+| GET `/api/developers` | Fixed-account public profiles and repositories; read-only, no account parameter |
 | GET `/health` | Unauthenticated `ok` liveness response |
 
 Policy keys: `warn`, `review`, `block` (strictly increasing integers, 1–100); `block_harmful`, `block_sensitive`, `ml_enabled`, `retain_prompts` (booleans); `retention_days` (1–365); `tools` (empty or `["calculator"]`). Omitted keys use defaults.
@@ -70,3 +71,11 @@ Policy keys: `warn`, `review`, `block` (strictly increasing integers, 1–100); 
 - Rate: 60 writes per minute per workspace by default, set with `PG_RATE_LIMIT`. Login attempts are counted by remote address. This is a local prototype quota, not distributed abuse prevention.
 - Ollama: 45-second timeout, 1 MiB response byte cap, 10,000-character output inspection limit, 256 predicted-token request option.
 - Errors use JSON `error` for API requests: 400 invalid data, 401 unauthenticated, 403 denied/CSRF/policy, 404 missing or other-workspace record, 413 too large, 429 quota, 502 backend failure.
+
+## Public developer information
+
+`GET /api/developers` returns `developers` in fixed account order (`MeazbahMehedi`, `ItsMONIKAAKTER`), `refreshing`, `cache_seconds: 900`, and `read_only: true`. The normal browser authentication policy applies. The scan/gateway service token does not grant access to this endpoint when authentication is required. Account query parameters are ignored; write methods are unsupported.
+
+Each developer includes `username`, `name`, `profile_url`, `avatar_url`, `bio`, `location`, `company`, `website`, `followers`, `following`, `public_repos`, `joined`, `repositories`, `repositories_complete`, `status`, `message`, and `last_synced_utc`. Repository fields are `owner`, `name`, `url`, `description`, `language`, `stars`, `forks`, `issues`, `fork`, `archived`, `updated_at`, `homepage`, `topics`, and `license`. Optional text may be empty. Counts are null before a successful synchronization; zero is a real successful empty count.
+
+Status is `loading`, `fresh`, `stale`, `partial`, or `unavailable`. Failures are represented in these fields without discarding previously cached data. A repository page-limit result is `partial`; a failed or timed-out refresh is `stale` if cached data exists, otherwise `unavailable`. Data refresh is request-triggered, with a 15-minute successful cache and five-minute retry delay. Repository pagination has 100 entries per page, a 50-page cap and a 20-second per-account time budget. No GitHub token appears in this response.

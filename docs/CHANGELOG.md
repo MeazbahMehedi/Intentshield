@@ -1,3 +1,12 @@
+# GitHub Developers update — 25 October 2026
+
+- Fixed the Developers page accounts to MeazbahMehedi and ItsMONIKAAKTER in server source.
+- Added public GitHub profile names, avatars, bios, metadata, counts and links.
+- Added paginated public repository listings for both accounts, with search, developer filter and sorting.
+- Added background synchronization, a 15-minute cache, five-minute error retry, stale-data fallback and explicit empty/unavailable/partial states.
+- Removed editable profile placeholders; no website account-editing controls or GitHub write endpoint exists.
+- Verified 98 automated tests, the existing core browser flows, and developer-page desktop/mobile fixture checks. Live public profile/repository synchronization succeeded for both accounts; avatars use a safe initials fallback when image loading is unavailable.
+
 # Upgrade notes — 24 October 2026
 
 - Replaced cookie-only history with scoped SQLite scan/evaluation/policy/audit persistence.

@@ -32,7 +32,7 @@ Local mode supports a browser session without login. Optional authenticated role
 | FR-18 | Provide optional hashed accounts, roles and restricted service access | Login/role/token tests |
 | FR-19 | Enforce CSRF, quotas, security headers and request limits | Security middleware and regression tests |
 | FR-20 | Provide historical decision, language, detector and daily analytics | /api/analytics; browser verification |
-| FR-21 | Let maintainers edit developer profiles and public CV links | developers.json, developer page route smoke test |
+| FR-21 | Display fixed GitHub developer profiles and all fetched public repositories without website editing | GitHub profile service, read-only API, pagination/cache/route tests |
 
 ## 4. Policy behavior
 

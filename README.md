@@ -50,7 +50,7 @@ Enable it in **Policies → Use optional lexical ML baseline**. The first predic
 | Analytics | SQLite scan history, daily trends, policy decisions, language distribution, detector findings, latency, CSV/JSON export and printable evidence/evaluation reports |
 | Delivery controls | Optional login with admin/analyst roles, hashed passwords, scoped service token, CSRF checks, quotas, size limits, security headers, redaction and audit events |
 | Interface | Separate pages, responsive sidebar, animated panels/counters, dark/light themes, reduced-motion support, original EN/中文 pages; new operations pages are English |
-| Team page | Editable developer profiles with GitHub and CV links |
+| Team page | Fixed GitHub profiles, live avatars and all fetched public repositories; search, developer filter and sorting |
 
 **Encoding alone is not an attack.** Decoded variants are inspected for evidence. Original input is never executed.
 
@@ -179,9 +179,11 @@ These data were previously exposed during project development. Overlap filtering
 python -m pytest -q
 ```
 
-The delivered build passed **90 automated tests**, including input validation, independent safety scoring, encoded attacks and secrets, policy effects, gateway prevention, output suppression, tool restrictions, role boundaries, CSRF, quotas, retention, workspace isolation and evaluation exports/comparisons.
+The delivered build passed **98 automated tests**, including input validation, independent safety scoring, encoded attacks and secrets, policy effects, gateway prevention, output suppression, tool restrictions, role boundaries, CSRF, quotas, retention, workspace isolation, evaluation exports/comparisons, and GitHub fixed identities, public repository pagination and cache failure handling.
 
 Browser flows were also exercised on desktop and a 390-pixel mobile viewport: scanner, policy save, document scanning, gateway allow/block, evaluation, analytics and navigation, with no JavaScript runtime errors. Optional local browser smoke script: `qa/browser_check.py` (requires Playwright and Chromium; start with an unused local port 5000).
+
+The GitHub Developers page was also checked with real public profile/repository responses and deterministic browser fixtures for multiple repositories, an empty account, stale cache and unavailable data. Search, developer filter, sorting, text escaping, responsive layout and light/dark themes passed without JavaScript errors. Optional repeatable check: `python qa/browser_developers.py` (uses temporary fixture data and an unused automatic local port; requires Playwright/Chromium). Avatar initials are shown if browser image loading fails.
 
 CI runs unit/integration checks on Windows/Linux and with/without the optional ML dependency. Original legacy evaluation commands remain available for backward comparison; they evaluate the old CombinedDetector rather than the new policy gateway. Use `manage.py evaluate` or the Lab for the upgraded engine.
 
@@ -195,7 +197,7 @@ PromptGuard/
 ├── docs/                       # Architecture, API, requirements, security, evaluation
 ├── promptguard/
 │   ├── database/               # SQLite schema and scoped persistence
-│   ├── data/                   # Rules, corpora, developer profiles
+│   ├── data/                   # Rules and evaluation corpora
 │   ├── detectors/              # Original explainable detectors
 │   ├── evaluation/             # Legacy evaluation entry points
 │   ├── routes/main.py          # Original pages + compatible APIs
@@ -210,9 +212,17 @@ PromptGuard/
 
 Only the inner `promptguard/` package is active. Obsolete top-level duplicate routes/templates/assets have been removed.
 
-## Add developer details and CVs
+## GitHub Developers page
 
-Edit `promptguard/data/developers.json` for you and your teammate. Add names, roles, biographies and HTTPS GitHub/CV links. You can place public PDFs under `promptguard/static/cv/` and link them as `/static/cv/your-name.pdf`. Profile links are limited to HTTPS or local static assets. Files under `static/` are publicly accessible, including when authentication is enabled.
+The Developers page uses the fixed accounts [MeazbahMehedi](https://github.com/MeazbahMehedi) and [ItsMONIKAAKTER](https://github.com/ItsMONIKAAKTER). Account names are source constants in `promptguard/services/github_profiles.py`; no website form or write API can change them. Profile names, avatars, bios, location, links and counts come from public GitHub data. Edit those details on GitHub to update the page.
+
+Public repositories from both accounts are listed, including forks and archived projects, with descriptions, topics, language, stars, forks, issues, license and update date where provided by GitHub. Search, developer filtering and sorting do not modify GitHub. An account without public repositories has an explicit empty state. Private repositories and repository README images are not downloaded.
+
+The server loads data in background threads on page/API requests and caches successful results for 15 minutes. While open, the browser checks the same-origin API every minute (more frequently during initial loading). Updates therefore appear after cache expiry and a subsequent check, rather than instantly after a GitHub edit. The public-data cache is `github-public-profiles.json` beside the configured SQLite database; it is separate from scan history. On failures or rate limits, the page keeps any successful cached data, labels it as cached and retries after five minutes. With no successful cache, it shows an unavailable state and profile links.
+
+Repository requests paginate in batches of up to 100, with a maximum of 50 pages and a 20-second time budget per account; individual requests time out after at most eight seconds. A page-limit result is explicitly marked partial. A failed or timed-out refresh preserves the previous successful result. GitHub access requires server internet connectivity; direct avatar loading also requires browser internet connectivity.
+
+An optional server environment variable `PG_GITHUB_TOKEN` can increase the available GitHub API quota. Use a minimally privileged token for public information only. It is never sent to the browser, saved in the public-data cache, or accepted through a website input. No token is required for public GitHub data.
 
 ## Privacy and boundaries
 

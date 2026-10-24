@@ -14,3 +14,5 @@ class Config:
     DATABASE = os.environ.get('PG_DATABASE')
     OLLAMA_URL = os.environ.get('PG_OLLAMA_URL', 'http://127.0.0.1:11434')
     OLLAMA_MODEL = os.environ.get('PG_OLLAMA_MODEL', '')
+
+    GITHUB_TOKEN = os.environ.get('PG_GITHUB_TOKEN', '')

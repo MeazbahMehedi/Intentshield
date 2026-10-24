@@ -80,4 +80,12 @@ Rules evaluation uses original-text detector behavior; hybrid adds bounded varia
 
 ## Operational limits
 
-SQLite and in-process model caches suit local coursework and small deployments. Requests run synchronously; large lab runs can occupy a worker, quotas are per workspace, and retention cleanup is lazy. There is no worker queue, distributed rate limiting, enterprise identity, vector database, external URL fetching or model-driven tool execution. These are explicit project boundaries.
+SQLite and in-process model caches suit local coursework and small deployments. Requests run synchronously; large lab runs can occupy a worker, quotas are per workspace, and retention cleanup is lazy. There is no worker queue, distributed rate limiting, enterprise identity, vector database, arbitrary external URL crawling or model-driven tool execution. These are explicit project boundaries.
+
+## Public GitHub integration
+
+`GitHubProfiles` is initialized once per Flask app and serves the Developers page and read-only `/api/developers`. The two usernames are source constants. The browser fetches only the same-origin API for profile data; server daemon threads query fixed `api.github.com/users/...` paths and normalize public fields. Pagination constructs its own URLs rather than following upstream link destinations. Redirects are disabled. The optional server token is restricted to these API requests.
+
+An in-process lock protects refresh scheduling and snapshots. Successful results are persisted atomically as a public JSON cache beside the SQLite database; scan and policy records are unaffected. Refreshing is lazy on requests, with no separate scheduler. Successful data expires after 900 seconds; failures retry after 300 seconds while preserving the last good cache. Each account has a 20-second total request budget and up to 50 repository pages of 100 entries. A safety-limit result is labeled partial. Each worker maintains its own schedule; this is not a distributed cache.
+
+The UI renders upstream text through DOM text nodes, validates HTTPS links and limits avatar domains. Browser CSP permits GitHub/avatar image hosts. The page supports an empty account, cached data, unavailable network, search/filter/sort, responsive layout and avatar initials if an image fails. There are no website account-editing controls or write routes.

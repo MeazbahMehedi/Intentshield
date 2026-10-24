@@ -24,6 +24,8 @@ def create_app(config=None):
             pass
         app.config['SECRET_KEY']=secret_path.read_text().strip()
     init_db(app)
+    from promptguard.services.github_profiles import GitHubProfiles
+    app.extensions['github_profiles'] = GitHubProfiles(Path(app.config['DATABASE']).parent / 'github-public-profiles.json', app.config.get('GITHUB_TOKEN', ''))
     from promptguard.routes.main import main_bp
     from promptguard.routes.advanced import advanced_bp
     app.register_blueprint(main_bp)

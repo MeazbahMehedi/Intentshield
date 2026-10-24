@@ -36,3 +36,11 @@ Anonymous users can create fresh sessions; this quota is not global anti-abuse i
 All clients must route requests through the gateway for its prevention controls to apply and supply relevant history/source text. A standalone scan cannot secure other apps. Output inspection uses the same limited detector family and can miss novel model-generated harm or exfiltration. Human review of stopped requests occurs outside the app; no bypass approval mechanism is included.
 
 Use synthetic credentials and permitted test documents when demonstrating the project. More stringent production requirements need an independent security review and a different deployment architecture.
+
+## GitHub profile boundary
+
+The Developers page reads only public profile/repository data for two fixed source-code account names. Website requests cannot select an arbitrary account or destination URL and cannot edit profile or repository data. Server API requests target `api.github.com` only; redirects are disabled, pagination constructs fixed API paths, responses are size bounded and each account refresh has a 20-second request budget. Private repositories are excluded even if an optional token can access them.
+
+`PG_GITHUB_TOKEN` is optional server-only configuration. It is not returned through HTML/JSON, sent to avatar hosts, or persisted in the public-data cache. Keep it out of source archives and GitHub commits. GitHub receives profile/repository requests from the server. Avatar images load directly from GitHub/`avatars.githubusercontent.com` in the browser with no-referrer policy; those hosts are explicitly permitted by CSP. Prompt, scan and gateway bodies are not sent by this integration.
+
+Upstream strings render as text, external links accept HTTPS only, and new tabs use `noopener noreferrer`. Successful public metadata is cached separately from sensitive scan history. A local filesystem administrator can change source constants or the cache; read-only website behavior does not imply protection against server administrators. No GitHub write operation is implemented.

@@ -217,12 +217,16 @@ def gateway():
     base.update(output_released=True,status='completed',output=redact(output),tool_result=tool_result)
     return jsonify(base)
 
+def github_profiles():
+    return current_app.extensions['github_profiles']
+
+
 @advanced_bp.get('/developers')
 def developers():
-    from pathlib import Path
-    profiles=json.loads((Path(__file__).resolve().parents[1]/'data/developers.json').read_text())
-    for person in profiles:
-        for field in ('github','cv'):
-            value=person.get(field,'')
-            if not isinstance(value,str) or not value.startswith(('https://','/static/')):person[field]=''
-    return render_template('developers.html',page_title='Developers',developers=profiles)
+    return render_template('developers.html',page_key='developers',page_title='Developers',
+                           github=github_profiles().snapshot(schedule=not current_app.testing))
+
+
+@advanced_bp.get('/api/developers')
+def developers_data():
+    return jsonify(github_profiles().snapshot(schedule=not current_app.testing))
