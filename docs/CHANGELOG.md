@@ -1,4 +1,4 @@
-# IntentShield branding update — 25 October 2026
+# IntentShield update — 25 October 2026
 
 - Renamed the project, root folder, Python package/imports, UI labels, translations, GitHub workflow title and exported scan filenames.
 - Replaced the brand mark with a protected-conversation SVG logo and added the matching favicon and README logo.
