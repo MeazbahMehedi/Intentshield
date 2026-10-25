@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Dashboard
+{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span><span data-i18n="dashboard.eyebrow">ANALYTICS</span></div><h1 data-i18n="page.dashboard">Dashboard</h1><p class="page-subtitle" data-i18n="dashboard.subtitle">A clear view of recent scan activity, risk levels, and matched rules.</p></div>
+  <div class="heading-actions">
+    <label class="select-wrap"><span class="sr-only" data-i18n="dashboard.rangeLabel">Time range</span><select id="range" class="select-control"><option value="day" data-i18n="dashboard.today">Last 24 hours</option><option value="week" selected data-i18n="dashboard.week">Last 7 days</option><option value="month" data-i18n="dashboard.month">Last 30 days</option><option value="all" data-i18n="dashboard.all">All recent records</option></select></label>
+    <a class="button button-secondary" href="{{ url_for('main.api_export', format='csv') }}"><span>⇩</span><span data-i18n="actions.export">Export report</span></a>
+  </div>
+</section>
+
+<div class="dashboard-notice" id="dashboard-note"><span class="notice-icon">i</span><span data-i18n="dashboard.sessionNote">Analytics use retained workspace records in the local database.</span><button type="button" id="seed" class="button button-quiet"><span>＋</span><span data-i18n="dashboard.sampleData">Load sample data</span></button></div>
+
+<section class="dashboard-stat-grid">
+  <article class="metric-card metric-cyan" data-metric="total"><div class="metric-top"><span data-i18n="metrics.total">Total Scans</span><span class="metric-icon">⌁</span></div><div class="metric-number" data-num>0</div><div class="metric-foot"><span class="metric-dot"></span><span data-i18n="dashboard.periodTotal">Scans in selected period</span></div></article>
+  <article class="metric-card metric-amber" data-metric="flagged"><div class="metric-top"><span data-i18n="metrics.failed">Flagged</span><span class="metric-icon">!</span></div><div class="metric-number" data-num>0</div><div class="metric-foot"><span class="metric-dot"></span><span data-i18n="dashboard.flaggedFoot">Medium or high injection risk</span></div></article>
+  <article class="metric-card metric-red" data-metric="high"><div class="metric-top"><span data-i18n="metrics.highRisk">High Risk</span><span class="metric-icon">×</span></div><div class="metric-number" data-num>0</div><div class="metric-foot"><span class="metric-dot"></span><span data-i18n="dashboard.highFoot">High-risk scans in period</span></div></article>
+  <article class="metric-card metric-purple" data-metric="avg"><div class="metric-top"><span data-i18n="metrics.average">Average Score</span><span class="metric-icon">◉</span></div><div class="metric-number" data-num>0</div><div class="metric-foot"><span class="metric-dot"></span><span data-i18n="dashboard.averageFoot">Mean heuristic score / 100</span></div></article>
+</section>
+
+<div class="dashboard-layout">
+  <div class="dashboard-left">
+    <section class="panel chart-panel">
+      <div class="section-heading"><div><div class="eyebrow" data-i18n="dashboard.distributionEyebrow">RISK OVERVIEW</div><h2 data-i18n="dashboard.distributionTitle">Risk distribution</h2><p data-i18n="dashboard.distributionDesc">How recent prompts were classified by the injection detector.</p></div><span class="panel-symbol">◉</span></div>
+      <div class="distribution-total"><strong id="distribution-total">0</strong><span data-i18n="dashboard.analyzed">prompts analyzed</span></div>
+      <div class="distribution-bar" id="distribution-bar"><span class="dist-low"></span><span class="dist-medium"></span><span class="dist-high"></span></div>
+      <div class="distribution-legend">
+        <div><span class="risk-dot low-dot"></span><span data-i18n="risk.low">Low</span><strong id="lv-Low">0</strong></div>
+        <div><span class="risk-dot medium-dot"></span><span data-i18n="risk.medium">Medium</span><strong id="lv-Medium">0</strong></div>
+        <div><span class="risk-dot high-dot"></span><span data-i18n="risk.high">High</span><strong id="lv-High">0</strong></div>
+      </div>
+      <div class="chart-empty" id="distribution-empty" hidden><span>◷</span><span data-i18n="dashboard.empty">No scan data for this period yet.</span></div>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="section-heading"><div><div class="eyebrow" data-i18n="dashboard.rulesEyebrow">DETECTION SIGNALS</div><h2 data-i18n="dashboard.rulesTitle">Top matched rules</h2><p data-i18n="dashboard.rulesDesc">Most frequently matched rules in retained scan history.</p></div><a class="text-link" href="{{ url_for('main.policies') }}"><span data-i18n="recommendations.view">View policies</span><span>↗</span></a></div>
+      <div class="table-wrap">
+        <table class="data-table rules-table"><thead><tr><th data-i18n="table.rule">Rule</th><th data-i18n="dashboard.frequency">Frequency</th><th data-i18n="table.hits">Hits</th></tr></thead><tbody id="rules-body"></tbody></table>
+      </div>
+      <div class="empty-inline" id="rules-empty" hidden><span>✓</span><span data-i18n="dashboard.noRules">No injection rules matched in this period.</span></div>
+    </section>
+  </div>
+
+  <section class="panel bubble-panel">
+    <div class="section-heading"><div><div class="eyebrow" data-i18n="dashboard.categoriesEyebrow">SIGNAL LANDSCAPE</div><h2 data-i18n="dashboard.categoriesTitle">Detection categories</h2><p data-i18n="dashboard.categoriesDesc">Bubble size represents the number of category matches.</p></div><span class="panel-symbol blue-symbol">✧</span></div>
+    <div class="filter-tabs" role="group" aria-label="Filter category bubbles" data-i18n-aria-label="dashboard.filterLabel">
+      <button type="button" class="filter-tab active" data-risk-filter="All" data-i18n="dashboard.filterAll">All</button>
+      <button type="button" class="filter-tab" data-risk-filter="High" data-i18n="risk.high">High</button>
+      <button type="button" class="filter-tab" data-risk-filter="Medium" data-i18n="risk.medium">Medium</button>
+      <button type="button" class="filter-tab" data-risk-filter="Low" data-i18n="risk.low">Low</button>
+    </div>
+    <div class="bubble-chart-wrap">
+      <svg id="bubbles" viewBox="0 0 600 380" role="img" aria-label="Detection category bubbles"></svg>
+      <div class="chart-empty" id="bubble-empty" hidden><span>◌</span><span data-i18n="dashboard.noCategories">No category matches for this filter.</span></div>
+    </div>
+    <div class="bubble-legend" id="bubble-legend"></div>
+    <div class="panel-footnote"><span class="info-dot">i</span><span data-i18n="dashboard.bubbleNote">Category counts come from matched injection findings, not from harmful-content warnings.</span></div>
+  </section>
+</div>
+<section class="panel ops-card" id="advanced-analytics"><h2>Persistent security analytics</h2><div class="ops-kpis" id="analytics-kpis"></div><div class="ops-grid"><div><h3>Policy decisions</h3><div class="ops-bars" id="analytics-actions"></div></div><div><h3>Languages</h3><div class="ops-bars" id="analytics-languages"></div></div><div><h3>Detector findings</h3><div class="ops-bars" id="analytics-detectors"></div></div><div><h3>Daily scan trend (UTC)</h3><div class="ops-bars" id="analytics-trend"></div></div></div></section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/page-dashboard-0.js') }}"></script>
+{% endblock %}

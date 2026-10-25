@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<section id="developers-workspace">
+  <div class="ops-heading dev-heading">
+    <div><span class="ops-chip">THE PEOPLE BEHIND INTENTSHIELD</span><h1>Developers</h1><p>Meet our team and explore what we are building. Profiles and public repositories are synchronized directly from GitHub.</p></div>
+    <span class="dev-readonly">◈ Read-only profiles</span>
+  </div>
+  <div id="github-status" class="ops-status" role="status" aria-live="polite">Checking GitHub for the latest public information…</div>
+  <div id="developer-profiles" class="dev-profile-grid">
+    {% for person in github.developers %}
+    <article class="panel dev-profile" data-account="{{ person.username }}">
+      <div class="dev-profile-top"><div class="dev-avatar-frame"><img src="{{ person.avatar_url }}" alt="{{ person.username }} GitHub avatar" width="88" height="88" referrerpolicy="no-referrer"><span class="dev-avatar-fallback" aria-hidden="true">{{ person.username[:2]|upper }}</span></div><div><span class="dev-label">PROJECT DEVELOPER</span><h2>{{ person.name }}</h2><a class="text-link" href="{{ person.profile_url }}" target="_blank" rel="noopener noreferrer">@{{ person.username }} ↗</a></div></div>
+      <p>{{ person.bio or 'Public profile information will appear after GitHub synchronization.' }}</p>
+      <a class="button button-secondary" href="{{ person.profile_url }}" target="_blank" rel="noopener noreferrer">View GitHub profile ↗</a>
+    </article>
+    {% endfor %}
+  </div>
+  <section class="panel dev-repositories" aria-labelledby="repositories-title">
+    <div class="dev-section-heading"><div><span class="dev-label">OPEN SOURCE WORK</span><h2 id="repositories-title">Public repositories</h2><p>All fetched public repositories from both developers, including forks and archived projects.</p></div><span class="ops-chip" id="repo-count">Loading</span></div>
+    <div class="dev-toolbar">
+      <label class="dev-search">Search repositories<input id="repo-search" type="search" placeholder="Search names, descriptions, languages or topics…"></label>
+      <label>Developer<select id="repo-owner"><option value="all">Both developers</option>{% for person in github.developers %}<option value="{{ person.username }}">{{ person.username }}</option>{% endfor %}</select></label>
+      <label>Sort by<select id="repo-sort"><option value="updated">Recently updated</option><option value="stars">Most stars</option><option value="name">Name</option></select></label>
+    </div>
+    <div id="repository-list" class="dev-repo-grid" aria-live="polite"></div>
+    <p id="repo-empty" class="dev-empty">Repositories will appear here after synchronization.</p>
+    <p class="dev-footnote">Public GitHub data refreshes automatically when this page is open. Profile details are managed on GitHub; this website has no profile or repository editing controls.</p>
+  </section>
+  <noscript><p class="ops-status">Enable JavaScript to load live repository data, or use the profile links above to open GitHub.</p></noscript>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/developers.js') }}"></script>{% endblock %}

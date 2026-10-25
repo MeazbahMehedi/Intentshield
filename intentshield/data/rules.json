@@ -1,0 +1,347 @@
+{
+  "pattern_rules": [],
+  "structured_rules": [
+    {
+      "name": "Tool execution with instruction override",
+      "all_terms": [
+        "ignore previous instructions"
+      ],
+      "any_terms": [
+        "run command",
+        "execute tool",
+        "call the function",
+        "use the browser"
+      ],
+      "explanation": "Combines an instruction-override phrase with a request to execute a tool or action.",
+      "weight": 35,
+      "category": "Prompt injection"
+    },
+    {
+      "name": "Credential collection and external destination",
+      "all_terms": [
+        "password"
+      ],
+      "any_terms": [
+        "send to",
+        "upload to",
+        "email to",
+        "forward to"
+      ],
+      "explanation": "Combines credential-related language with a request to send information to another destination.",
+      "weight": 40,
+      "category": "Data exposure"
+    },
+    {
+      "name": "Untrusted text claims authority",
+      "all_terms": [
+        "ignore the user"
+      ],
+      "any_terms": [
+        "document says",
+        "webpage says",
+        "email says",
+        "quoted text says"
+      ],
+      "explanation": "May indicate that instructions embedded in external content are being treated as authoritative.",
+      "weight": 30,
+      "category": "Prompt injection"
+    },
+    {
+      "name": "Encoded instruction followed",
+      "all_terms": [
+        "decode"
+      ],
+      "any_terms": [
+        "base64",
+        "unicode escape",
+        "hex-encoded",
+        "encoded payload"
+      ],
+      "explanation": "Combines a decoding request with a direction to interpret encoded content as an instruction.",
+      "weight": 30,
+      "category": "Obfuscation"
+    },
+    {
+      "name": "Chinese instruction override",
+      "all_terms": [
+        "忽略之前的指令"
+      ],
+      "any_terms": [
+        "系统提示词",
+        "开发者指令",
+        "隐藏提示",
+        "内部配置"
+      ],
+      "explanation": "Detects Chinese-language attempts to override instructions or extract hidden context.",
+      "weight": 45,
+      "category": "Prompt injection"
+    },
+    {
+      "name": "Chinese privileged tool request",
+      "all_terms": [
+        "不经批准"
+      ],
+      "any_terms": [
+        "浏览器",
+        "终端",
+        "数据库",
+        "导出机密文件"
+      ],
+      "explanation": "Combines a lack of approval with a request to use a tool or access confidential data.",
+      "weight": 35,
+      "category": "Unauthorized tool use"
+    },
+    {
+      "name": "Roleplay safety bypass",
+      "all_terms": [
+        "role-play"
+      ],
+      "any_terms": [
+        "ignore safety",
+        "unrestricted",
+        "reveal the hidden prompt",
+        "no restrictions"
+      ],
+      "explanation": "Combines a role-play frame with an instruction to bypass safeguards or disclose hidden context.",
+      "weight": 35,
+      "category": "Jailbreak"
+    },
+    {
+      "name": "Indirect instruction in retrieved content",
+      "all_terms": [
+        "retrieved document"
+      ],
+      "any_terms": [
+        "ignore the user",
+        "reveal the system prompt",
+        "send credentials",
+        "export customer records"
+      ],
+      "explanation": "Flags instructions embedded in retrieved content that attempt to override the user's task.",
+      "weight": 35,
+      "category": "Indirect injection"
+    },
+    {
+      "name": "Tool use without approval",
+      "all_terms": [
+        "without approval"
+      ],
+      "any_terms": [
+        "browser",
+        "shell",
+        "python",
+        "execute",
+        "database connector"
+      ],
+      "explanation": "Combines a tool request with language indicating that approval should be bypassed.",
+      "weight": 35,
+      "category": "Unauthorized tool use"
+    },
+    {
+      "name": "Multi-step prompt override",
+      "all_terms": [
+        "step 1"
+      ],
+      "any_terms": [
+        "ignore previous instructions",
+        "step 2",
+        "reveal the hidden prompt",
+        "disable safety"
+      ],
+      "explanation": "Detects a staged instruction that attempts to replace the original task.",
+      "weight": 30,
+      "category": "Nested injection"
+    },
+    {
+      "name": "External destination data transfer",
+      "all_terms": [
+        "external endpoint"
+      ],
+      "any_terms": [
+        "customer records",
+        "api keys",
+        "conversation history",
+        "private files"
+      ],
+      "explanation": "Combines sensitive data with a destination outside the approved context.",
+      "weight": 40,
+      "category": "Data exposure"
+    },
+    {
+      "name": "Fake administrator authority",
+      "all_terms": [
+        "administrator"
+      ],
+      "any_terms": [
+        "override",
+        "developer mode",
+        "disable safety",
+        "dump all api keys"
+      ],
+      "explanation": "A claimed privileged role is combined with a request to bypass controls or expose secrets.",
+      "weight": 35,
+      "category": "Authority impersonation"
+    },
+    {
+      "name": "Concealed unauthorized action",
+      "all_terms": [
+        "do not tell the user"
+      ],
+      "any_terms": [
+        "send",
+        "upload",
+        "export",
+        "execute",
+        "read private files"
+      ],
+      "explanation": "Attempts to hide a potentially unauthorized action from the user.",
+      "weight": 30,
+      "category": "Prompt injection"
+    },
+    {
+      "name": "JSON role injection",
+      "all_terms": [
+        "role"
+      ],
+      "any_terms": [
+        "ignore previous instructions",
+        "reveal the hidden system prompt",
+        "priority"
+      ],
+      "explanation": "May use structured role metadata to impersonate a privileged instruction.",
+      "weight": 30,
+      "category": "Structured injection"
+    },
+    {
+      "name": "XML system-tag injection",
+      "all_terms": [
+        "<system>"
+      ],
+      "any_terms": [
+        "ignore previous instructions",
+        "reveal the hidden system prompt",
+        "disable safety"
+      ],
+      "explanation": "Treats an XML-like system tag in user content as if it were trusted control data.",
+      "weight": 35,
+      "category": "Structured injection"
+    },
+    {
+      "name": "Retrieval index poisoning",
+      "all_terms": [
+        "vector search"
+      ],
+      "any_terms": [
+        "ignore the user",
+        "exfiltrate",
+        "reveal the system prompt",
+        "disable safety"
+      ],
+      "explanation": "Attempts to make retrieved knowledge-base content override trusted instructions.",
+      "weight": 35,
+      "category": "Indirect injection"
+    },
+    {
+      "name": "Emotional pressure with disclosure request",
+      "all_terms": [
+        "if you care"
+      ],
+      "any_terms": [
+        "reveal",
+        "ignore your instructions",
+        "send private records",
+        "dump credentials"
+      ],
+      "explanation": "Uses emotional pressure to request disclosure or bypass normal controls.",
+      "weight": 25,
+      "category": "Social engineering"
+    },
+    {
+      "name": "Urgency pressure with bypass request",
+      "all_terms": [
+        "no time for checks"
+      ],
+      "any_terms": [
+        "bypass",
+        "reveal",
+        "disable",
+        "export"
+      ],
+      "explanation": "Uses urgency to encourage bypassing authorization or safety checks.",
+      "weight": 25,
+      "category": "Social engineering"
+    },
+    {
+      "name": "Persistent instruction override",
+      "all_terms": [
+        "for all future turns"
+      ],
+      "any_terms": [
+        "ignore the developer message",
+        "reveal the hidden system prompt",
+        "ignore all safety restrictions"
+      ],
+      "explanation": "Attempts to persist an instruction override across later requests.",
+      "weight": 35,
+      "category": "Persistent injection"
+    },
+    {
+      "name": "Code comment instruction injection",
+      "all_terms": [
+        "ai assistant"
+      ],
+      "any_terms": [
+        "ignore previous instructions",
+        "reveal the hidden prompt",
+        "dump private credentials"
+      ],
+      "explanation": "Contains assistant-directed instructions embedded in source comments or code text.",
+      "weight": 30,
+      "category": "Code injection"
+    },
+    {
+      "name": "Output suppression with secret disclosure",
+      "all_terms": [
+        "no explanation"
+      ],
+      "any_terms": [
+        "hidden system prompt",
+        "api credentials",
+        "private user records",
+        "developer message"
+      ],
+      "explanation": "Attempts to suppress warnings while demanding confidential information.",
+      "weight": 30,
+      "category": "Output manipulation"
+    },
+    {
+      "name": "Policy exception claim",
+      "all_terms": [
+        "academic research"
+      ],
+      "any_terms": [
+        "disable the refusal rules",
+        "reveal the hidden system prompt",
+        "disclose private records"
+      ],
+      "explanation": "Uses a claimed research exception to request bypassing normal controls.",
+      "weight": 25,
+      "category": "Policy bypass"
+    },
+    {
+      "name": "Instruction hidden in external document",
+      "all_terms": [
+        "document says"
+      ],
+      "any_terms": [
+        "ignore the user",
+        "reveal the system prompt",
+        "send credentials",
+        "override the developer"
+      ],
+      "explanation": "A document is presented as an authority to override the current task.",
+      "weight": 30,
+      "category": "Indirect injection"
+    }
+  ]
+}
