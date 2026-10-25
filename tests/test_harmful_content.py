@@ -1,5 +1,5 @@
 """Tests for the independent harmful-content warning detector."""
-from promptguard.detectors import CombinedDetector, HarmfulContentDetector
+from intentshield.detectors import CombinedDetector, HarmfulContentDetector
 
 
 def test_harmful_request_warns_without_becoming_injection():

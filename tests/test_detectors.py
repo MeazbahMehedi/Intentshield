@@ -1,5 +1,5 @@
 """Unit tests for the combined local detection engine."""
-from promptguard.detectors import CombinedDetector, PatternDetector, RuleDetector
+from intentshield.detectors import CombinedDetector, PatternDetector, RuleDetector
 
 
 def test_combined_detector_flags_instruction_override_and_extraction():
@@ -51,7 +51,7 @@ def test_detector_metadata_is_available_for_ui():
     assert "Pattern detector" in result["detectors_used"]
     assert "Structured rule detector" in result["detectors_used"]
 def test_describe_context_does_not_hide_instruction_override():
-    from promptguard.detectors.pattern_detector import PatternDetector
+    from intentshield.detectors.pattern_detector import PatternDetector
 
     detector = PatternDetector()
     prompt = (
@@ -68,7 +68,7 @@ def test_describe_context_does_not_hide_instruction_override():
 
 
 def test_translate_context_does_not_hide_instruction_override():
-    from promptguard.detectors.pattern_detector import PatternDetector
+    from intentshield.detectors.pattern_detector import PatternDetector
 
     detector = PatternDetector()
     prompt = (
@@ -85,7 +85,7 @@ def test_translate_context_does_not_hide_instruction_override():
 
 
 def test_benign_educational_prompt_is_not_flagged_as_override():
-    from promptguard.detectors.pattern_detector import PatternDetector
+    from intentshield.detectors.pattern_detector import PatternDetector
 
     detector = PatternDetector()
     prompt = (
@@ -103,7 +103,7 @@ def test_benign_educational_prompt_is_not_flagged_as_override():
 
 import unicodedata
 
-from promptguard.detectors.base import normalize_text
+from intentshield.detectors.base import normalize_text
 
 
 def test_normalize_text_casefolds():
@@ -142,7 +142,7 @@ def test_normalize_text_does_not_mutate_original_string():
     assert original == "ＩＧＮＯＲＥ\u200b this"
 
 def test_explosive_construction_rule_is_not_duplicated():
-    from promptguard.detectors.pattern_detector import PATTERN_RULES
+    from intentshield.detectors.pattern_detector import PATTERN_RULES
 
     names = [rule["name"] for rule in PATTERN_RULES]
 

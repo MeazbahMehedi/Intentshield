@@ -2,8 +2,8 @@
 from copy import deepcopy
 import time
 import pytest
-from promptguard.services import github_profiles as module
-from promptguard.services.github_profiles import DEVELOPER_ACCOUNTS, GitHubProfiles, GitHubUnavailable
+from intentshield.services import github_profiles as module
+from intentshield.services.github_profiles import DEVELOPER_ACCOUNTS, GitHubProfiles, GitHubUnavailable
 
 USER = DEVELOPER_ACCOUNTS[0]
 

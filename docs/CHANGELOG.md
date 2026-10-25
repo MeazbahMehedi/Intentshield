@@ -1,3 +1,12 @@
+# IntentShield branding update — 25 October 2026
+
+- Renamed the project, root folder, Python package/imports, UI labels, translations, GitHub workflow title and exported scan filenames.
+- Replaced the brand mark with a protected-conversation SVG logo and added the matching favicon and README logo.
+- Updated the full README with technologies, architecture, workflow and migration guidance.
+- Preserved rules, all dataset JSON and historical evaluation JSON byte for byte; retained existing page layout, styles, configuration variables and model integration behavior.
+- Preserved existing database and browser preference compatibility. A fresh installation uses `intentshield.sqlite3`; an existing `promptguard.sqlite3` is opened in place when the new filename is absent.
+- Verified 98 tests, both bundled browser checks, and matching default-policy analysis for all 1,637 dataset cases, excluding source fingerprints and latency.
+
 # GitHub Developers update — 25 October 2026
 
 - Fixed the Developers page accounts to MeazbahMehedi and ItsMONIKAAKTER in server source.

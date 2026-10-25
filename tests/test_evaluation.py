@@ -1,6 +1,6 @@
 
-from promptguard.evaluation.evaluate import load_dataset, predict_label
-from promptguard.detectors.combined_detector import CombinedDetector
+from intentshield.evaluation.evaluate import load_dataset, predict_label
+from intentshield.detectors.combined_detector import CombinedDetector
 
 
 def test_evaluation_dataset_contains_expanded_unique_cases():
@@ -55,7 +55,7 @@ def test_combined_and_test_corpora_are_synchronized():
     import json
     from pathlib import Path
 
-    data_dir = Path(__file__).resolve().parents[1] / "promptguard" / "data"
+    data_dir = Path(__file__).resolve().parents[1] / "intentshield" / "data"
     combined = json.loads((data_dir / "combined_cases.json").read_text(encoding="utf-8"))
     test_cases = json.loads((data_dir / "test_cases.json").read_text(encoding="utf-8"))
     assert combined == test_cases
@@ -65,6 +65,6 @@ def test_structured_rules_were_expanded():
     import json
     from pathlib import Path
 
-    rules_path = Path(__file__).resolve().parents[1] / "promptguard" / "data" / "rules.json"
+    rules_path = Path(__file__).resolve().parents[1] / "intentshield" / "data" / "rules.json"
     rules = json.loads(rules_path.read_text(encoding="utf-8"))
     assert len(rules["structured_rules"]) == 23

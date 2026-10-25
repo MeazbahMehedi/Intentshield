@@ -4,9 +4,9 @@ import getpass
 import json
 from pathlib import Path
 from werkzeug.security import generate_password_hash
-from promptguard import create_app
-from promptguard.database.db import db
-from promptguard.services.evaluation import evaluate, dataset_audit
+from intentshield import create_app
+from intentshield.database.db import db
+from intentshield.services.evaluation import evaluate, dataset_audit
 
 
 def main():

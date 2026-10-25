@@ -1,4 +1,4 @@
-# Software requirements specification — PromptGuard 3
+# Software requirements specification — IntentShield 3
 
 ## 1. Purpose and scope
 

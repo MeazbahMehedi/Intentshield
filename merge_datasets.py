@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from collections import Counter
 
-DATA_DIR = Path("promptguard") / "data"
+DATA_DIR = Path("intentshield") / "data"
 PROMPT_FILE = DATA_DIR / "prompt_cases.json"
 ATTACK_FILE = DATA_DIR / "attack_payloads.json"
 OUTPUT_FILE = DATA_DIR / "combined_cases.json"

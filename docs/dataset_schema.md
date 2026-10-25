@@ -1,8 +1,8 @@
-# PromptGuard Evaluation Dataset
+# IntentShield Evaluation Dataset
 
 ## Purpose
 
-The labeled datasets evaluate PromptGuard's ability to identify prompt-injection attempts and potentially harmful prompts while distinguishing them from benign requests. The labels are expected outcomes for evaluation, not a guarantee that the detector will be correct.
+The labeled datasets evaluate IntentShield's ability to identify prompt-injection attempts and potentially harmful prompts while distinguishing them from benign requests. The labels are expected outcomes for evaluation, not a guarantee that the detector will be correct.
 
 ## Current dataset sizes
 
@@ -41,4 +41,4 @@ Safe examples cover ordinary writing, programming, education, translation, plann
 - `attack`: a prompt intended to exercise prompt-injection or potentially harmful-request detection.
 - `safe`: a benign request, including defensive or educational content that may discuss security risks.
 
-PromptGuard's current implementation is heuristic. False positives and false negatives are expected. The separate harmful-content warning is not the same as the injection score. Evaluate the combined classifier and each detector separately when reporting results.
+IntentShield's current implementation is heuristic. False positives and false negatives are expected. The separate harmful-content warning is not the same as the injection score. Evaluate the combined classifier and each detector separately when reporting results.

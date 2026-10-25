@@ -10,8 +10,8 @@ import tempfile
 from threading import Thread
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from promptguard import create_app
-from promptguard.services.github_profiles import DEVELOPER_ACCOUNTS, placeholder
+from intentshield import create_app
+from intentshield.services.github_profiles import DEVELOPER_ACCOUNTS, placeholder
 from werkzeug.serving import make_server
 from playwright.sync_api import sync_playwright, expect
 

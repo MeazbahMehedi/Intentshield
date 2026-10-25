@@ -1,5 +1,5 @@
 """Smoke tests for the dashboard and core detection examples."""
-from promptguard.routes.main import analyze_prompt
+from intentshield.routes.main import analyze_prompt
 
 
 def test_homepage_returns_ok(client):

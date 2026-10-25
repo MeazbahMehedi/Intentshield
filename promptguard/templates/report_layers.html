@@ -1,7 +1,0 @@
-<section class="panel ops-card">
-  <div class="ops-row"><span class="ops-chip">{{ result.decision.action }}</span><h2>Layered security assessment</h2>{% if result.scan_id %}<a class="text-link" href="/scans/{{ result.scan_id }}">Full evidence ↗</a>{% endif %}</div>
-  <p>{{ result.decision.reasons|join(' ') }}</p>
-  <div class="ops-kpis">{% for detector in result.detectors %}<div class="ops-kpi"><strong>{{ detector.score }}</strong><small>{{ detector.name }} · {{ detector.findings }} finding(s)</small></div>{% endfor %}</div>
-  <div class="ops-chips"><span class="ops-chip">Injection {{ result.injection_score }}/100</span><span class="ops-chip">{{ result.language }}</span><span class="ops-chip">{{ result.latency_ms }} ms</span><span class="ops-chip">{{ result.normalization.variants_checked }} text variants</span><span class="ops-chip">{{ result.engine_version }}</span></div>
-  <p>{{ result.remediation }}</p>
-</section>

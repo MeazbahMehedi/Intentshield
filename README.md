@@ -1,10 +1,51 @@
-# PromptGuard — AI Security & Evaluation Workspace
+<p align="center"><img src="intentshield/static/img/intentshield-logo.svg" width="80" alt="IntentShield logo"></p>
+
+# IntentShield — AI Security & Evaluation Workspace
 
 **Inspect prompts. Explain threats. Enforce policy. Measure the result.**
 
-PromptGuard is a Python/Flask security project with a multi-page dashboard, layered threat detection, an automated evaluation lab, persistent evidence, and an optional gateway to a local language model. It runs on a normal laptop; no API key or GPU is needed for the scanner or dry-run gateway.
+IntentShield is a Python/Flask security project with a multi-page dashboard, layered threat detection, an automated evaluation lab, persistent evidence, and an optional gateway to a local language model. It runs on a normal laptop; no API key or GPU is needed for the scanner or dry-run gateway.
 
 Built for software engineering coursework, security demonstrations, GitHub portfolios, and reproducible experiments. This is a working research prototype with measured limitations, rather than a guarantee that every unsafe request will be detected.
+
+## Why use IntentShield?
+
+IntentShield makes prompt-security decisions visible and repeatable. It lets you inspect matched evidence, compare detection approaches on the same datasets, tune a central policy, and demonstrate when the integrated gateway permits or stops a request. Persistent scan details and reports support classroom presentations and project review.
+
+## Core programming and technologies
+
+**Python is the core programming language.** The default scanner uses explainable heuristics, normalization and policy rules. An optional local lexical ML classifier can be enabled for comparison.
+
+| Layer | Technology | Role |
+|---|---|---|
+| Application | Python, Flask, Jinja2 | Web routes, page rendering, APIs and request handling |
+| Detection | Python, regular expressions, structured rules | Injection patterns, harmful-content findings and recognized sensitive-data checks |
+| Policy and gateway | Python services | ALLOW/WARN/REVIEW/BLOCK decisions, bounded calculator and optional Ollama forwarding |
+| Persistence | SQLite, Python `sqlite3` | Workspace-scoped scans, settings, users, experiments and audit records |
+| Interface | HTML, CSS, JavaScript, SVG | Existing responsive pages, charts, English/Chinese interface areas, themes and branding |
+| Optional ML | scikit-learn | Character TF-IDF and logistic regression trained from development data |
+| Testing | pytest; optional Playwright | Detector, API, policy, persistence, evaluation and browser regression checks |
+
+The application is a **modular monolith**: Flask routes call separate Python services for detection, normalization, policy, evaluation, persistence and GitHub profiles within one application. There is no frontend build step.
+
+## How it works
+
+1. A user submits a prompt or text from an untrusted source.
+2. Bounded normalization creates inspectable text variants without executing the input.
+3. The engine combines injection evidence with separate harmful-content and sensitive-data findings; the optional classifier can provide another signal.
+4. The central policy decides ALLOW, WARN, REVIEW or BLOCK and records evidence in the user's workspace.
+5. The scanner displays findings and history. The integrated gateway permits only ALLOW/WARN requests to reach its selected backend and checks the output before release.
+6. The evaluation lab runs the same engine against labeled datasets and saves metrics and comparisons.
+
+## Rename and existing installations
+
+The project is now **IntentShield**. The ZIP/root directory is `IntentShield`, the Python package is `intentshield`, and exported scan filenames use `intentshield-`. Continue to start the project with `python app.py`; CLI commands still use `python manage.py`.
+
+To retain an existing installation, stop the old server, back up `instance/`, and copy that folder into the new project root before the first start. Fresh installations use `instance/intentshield.sqlite3`. An existing `instance/promptguard.sqlite3` is opened in place if the new filename is absent. Preserve `session.key` and existing cookies when retaining anonymous history. A configured `PG_DATABASE` path still takes precedence.
+
+The existing `PG_*` environment variables and `pg-3-` engine-version prefix are retained for configuration and evaluation compatibility. Browser language/theme choices fall back to the previous saved keys. Detection rules, datasets and bundled historical evaluation JSON are preserved byte for byte.
+
+The source fingerprint changes because it hashes Python source, including renamed imports. The earlier JSON evaluation snapshots retain their original fingerprints and dates.
 
 ## Quick start — Windows / PyCharm
 
@@ -175,6 +216,8 @@ These data were previously exposed during project development. Overlap filtering
 
 ## Tests
 
+The IntentShield rename passed **98 tests**, both bundled browser checks, and an original-versus-renamed comparison of all **1,637 cases** across the main, development, holdout and robustness datasets. Complete analysis results matched after excluding processing time and source fingerprints. The comparison used the default policy with optional ML disabled; existing tests also exercised the available ML baseline. Rules and dataset JSON bytes are unchanged.
+
 ```powershell
 python -m pytest -q
 ```
@@ -190,12 +233,12 @@ CI runs unit/integration checks on Windows/Linux and with/without the optional M
 ## Project layout
 
 ```text
-PromptGuard/
+IntentShield/
 ├── app.py / config.py / manage.py
 ├── requirements.txt / requirements-ml.txt
 ├── README.md
 ├── docs/                       # Architecture, API, requirements, security, evaluation
-├── promptguard/
+├── intentshield/
 │   ├── database/               # SQLite schema and scoped persistence
 │   ├── data/                   # Rules and evaluation corpora
 │   ├── detectors/              # Original explainable detectors
@@ -204,17 +247,17 @@ PromptGuard/
 │   ├── routes/advanced.py      # Lab, documents, policy, auth and gateway
 │   ├── security/               # CSRF, roles, quotas and headers
 │   ├── services/               # Layered engine, normalization, ML, policy, evaluation
-│   ├── static/                 # CSS + JavaScript; no build pipeline
+│   ├── static/                 # CSS, JavaScript and SVG logo; no build pipeline
 │   └── templates/              # Separate page templates
 ├── tests/
-└── qa/browser_check.py
+└── qa/                         # Main workflow and Developers browser checks
 ```
 
-Only the inner `promptguard/` package is active. Obsolete top-level duplicate routes/templates/assets have been removed.
+Only the inner `intentshield/` package is active. Obsolete top-level duplicate routes/templates/assets have been removed.
 
 ## GitHub Developers page
 
-The Developers page uses the fixed accounts [MeazbahMehedi](https://github.com/MeazbahMehedi) and [ItsMONIKAAKTER](https://github.com/ItsMONIKAAKTER). Account names are source constants in `promptguard/services/github_profiles.py`; no website form or write API can change them. Profile names, avatars, bios, location, links and counts come from public GitHub data. Edit those details on GitHub to update the page.
+The Developers page uses the fixed accounts [MeazbahMehedi](https://github.com/MeazbahMehedi) and [ItsMONIKAAKTER](https://github.com/ItsMONIKAAKTER). Account names are source constants in `intentshield/services/github_profiles.py`; no website form or write API can change them. Profile names, avatars, bios, location, links and counts come from public GitHub data. Edit those details on GitHub to update the page.
 
 Public repositories from both accounts are listed, including forks and archived projects, with descriptions, topics, language, stars, forks, issues, license and update date where provided by GitHub. Search, developer filtering and sorting do not modify GitHub. An account without public repositories has an explicit empty state. Private repositories and repository README images are not downloaded.
 

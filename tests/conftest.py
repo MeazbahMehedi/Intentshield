@@ -1,6 +1,6 @@
 """Isolated application database for every test."""
 import pytest
-from promptguard import create_app
+from intentshield import create_app
 
 @pytest.fixture
 def app(tmp_path):

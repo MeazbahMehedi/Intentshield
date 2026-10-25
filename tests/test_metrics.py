@@ -1,7 +1,7 @@
 
 import pytest
 
-from promptguard.services.metrics import calculate_metrics
+from intentshield.services.metrics import calculate_metrics
 
 
 def test_perfect_predictions():
