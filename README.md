@@ -9,6 +9,8 @@
 
 **More Screens:**
 [Dashboard](docs/Screenshots/Dashboard.png) · [Security Gateway](docs/Screenshots/Security%20Gateway.png) · [Evaluation Lab](docs/Screenshots/Evaluation%20Lab.png) · [Scan](docs/Screenshots/Scan.png) · [Probe](docs/Screenshots/Probe.png) · [Audit](docs/Screenshots/Audit.png) · [Policy](docs/Screenshots/policy.png) · [Developers](docs/Screenshots/Developers.png) · [Untrusted Sources](docs/Screenshots/Untrusted%20Sources.png) · [Dark Mode](docs/Screenshots/Dark.png) · [Settings](docs/Screenshots/Settings.png)
+
+
 IntentShield is a Python/Flask security project with a multi-page dashboard, layered threat detection, an automated evaluation lab, persistent evidence, and an optional gateway to a local language model. It runs on a normal laptop; no API key or GPU is needed for the scanner or dry-run gateway.
 
 Built for software engineering coursework, security demonstrations, GitHub portfolios, and reproducible experiments. This is a working research prototype with measured limitations, rather than a guarantee that every unsafe request will be detected.
